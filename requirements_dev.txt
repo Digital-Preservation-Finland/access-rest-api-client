@@ -1,0 +1,11 @@
+requests
+click
+requests
+humanize
+tabulate
+
+# Testing requirements
+pytest
+pytest-cov
+pytest
+requests_mock

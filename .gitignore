@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+venv*/
+.venv*/
+junit.xml
+rpmbuild/
+build/
+htmlcov/
+coverage.xml
+.coverage
+dist/
+.eggs/
+_version.py
+*.egg-info/

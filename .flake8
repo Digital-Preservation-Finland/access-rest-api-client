@@ -1,0 +1,6 @@
+[flake8]
+# flake8 and pylint have conflicting ideas about ideal indentation length
+# with multi-line 'with' statements. Disable flake8 here and yield to pylint
+# instead.
+ignore =
+    E125

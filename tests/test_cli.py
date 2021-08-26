@@ -1,5 +1,6 @@
-import pytest
-
+"""
+dpres_access_rest_api_client.cli tests
+"""
 from urllib.parse import urlencode
 
 
@@ -26,19 +27,26 @@ def test_search(cli_runner, requests_mock):
     })
 
     requests_mock.get(
-        f"http://fakeapi/api/2.0/urn:uuid:fake_contract_id/search?{qs_encoded}",
+        f"http://fakeapi/api/2.0/urn:uuid:fake_contract_id/"
+        f"search?{qs_encoded}",
         json={
             "status": "success",
             "data": {
                 "results": [
                     {
-                        "location": "/api/2.0/urn:uuid:fake_contract_id/preserved/spam",
+                        "location": (
+                            "/api/2.0/urn:uuid:fake_contract_id/preserved/"
+                            "spam"
+                        ),
                         "createdate": "2021-08-01T08:59:05Z",
                         "id": "spam",
                         "pkg_type": "AIP"
                     },
                     {
-                        "location": "/api/2.0/urn:uuid:fake_contract_id/preserved/eggs",
+                        "location": (
+                            "/api/2.0/urn:uuid:fake_contract_id/preserved/"
+                            "eggs"
+                        ),
                         "createdate": "2021-08-02T09:01:58Z",
                         "lastmoddate": "2021-08-03T09:01:58Z",
                         "id": "eggs",
@@ -77,13 +85,17 @@ def test_search_query(cli_runner, requests_mock):
     qs_encoded = urlencode({"page": 1, "limit": 1000, "q": "mets_OBJID:eggs"})
 
     requests_mock.get(
-        f"http://fakeapi/api/2.0/urn:uuid:fake_contract_id/search?{qs_encoded}",
+        f"http://fakeapi/api/2.0/urn:uuid:fake_contract_id/"
+        f"search?{qs_encoded}",
         json={
             "status": "success",
             "data": {
                 "results": [
                     {
-                        "location": "/api/2.0/urn:uuid:fake_contract_id/preserved/eggs",
+                        "location": (
+                            "/api/2.0/urn:uuid:fake_contract_id/preserved/"
+                            "eggs"
+                        ),
                         "createdate": "2021-08-02T09:01:58Z",
                         "lastmoddate": "2021-08-03T09:01:58Z",
                         "id": "eggs",

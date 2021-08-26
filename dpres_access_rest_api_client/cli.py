@@ -14,6 +14,7 @@ import tabulate
 from .client import AccessClient, get_poll_interval_iter
 
 
+# pylint: disable=too-few-public-methods
 class Context:
     """Context class for the Click application"""
     client = None
@@ -22,6 +23,9 @@ class Context:
 @click.group()
 @click.pass_context
 def cli(ctx):
+    """
+    DPRES Access REST API client
+    """
     ctx.obj.client = AccessClient()
 
 
@@ -31,8 +35,8 @@ def cli(ctx):
     type=click.Path(file_okay=True, dir_okay=False, writable=True),
     default=None,
     help=(
-        "Path where the package will be saved. Defaults to `<aip_id>.<format>` "
-        "in the working directory."
+        "Path where the package will be saved. Defaults to "
+        "`<aip_id>.<format>` in the working directory."
     )
 )
 @click.option(
@@ -62,11 +66,36 @@ def download(ctx, path, archive_format, catalog, aip_id):
     else:
         path = Path(path)
 
+    # TODO: We could cache the DIP creation request with a reasonable
+    # time-to-live (eg. one day?)
+    #
+    # This means that if the user runs this command with certain parameters,
+    # starts polling for the DIP but closes the application before the download
+    # is finished, the previous polling URL will be used on next launch
+    # if the exact same parameters are used.
+    # This prevents the creation of new redundant DIP on the server-side.
+
     dip_request = client.create_dip_request(
         aip_id=aip_id, archive_format=archive_format,
         catalog=catalog
     )
 
+    # Start polling until the disseminated DIP is ready for download
+    _download_poll_until_ready(dip_request)
+
+    click.echo("")
+    click.echo(f"DIP is available, downloading to {path}...")
+
+    _download_save_to_path(dip_request, path)
+
+    click.echo("Done!")
+
+
+def _download_poll_until_ready(dip_request):
+    """
+    Poll for DIP until it is ready for download. Display a spinner animation
+    while the user is waiting.
+    """
     # Infinite iterator used to provide a very simple spinner animation
     spinner_anim = itertools.cycle(["|", "|", "/", "/", "-", "-", "\\", "\\"])
 
@@ -92,22 +121,23 @@ def download(ctx, path, archive_format, catalog, aip_id):
             poll_interval -= 0.25
             time.sleep(0.25)
 
-    click.echo("")
-    click.echo(f"DIP is available, downloading to {path}...")
 
+def _download_save_to_path(dip_request, path):
+    """
+    Download the DIP to the given path.
+    Display a progress bar during the download.
+    """
     # Download the DIP
-    download_size, download_iter = dip_request.get_download_size_and_iter()
+    download_size = dip_request.download_size
     human_size = humanize.naturalsize(download_size)
 
     with click.progressbar(
         label=f"Downloading ({human_size})...",
         length=download_size) as progressbar:
-        with path.open("wb", buffering=1024*1024) as file_:
-            for chunk in download_iter:
+        with path.open("wb", buffering=1024 * 1024) as file_:
+            for chunk in dip_request.download_iter:
                 file_.write(chunk)
-                progressbar.update(1024*1024)
-
-    click.echo("Done!")
+                progressbar.update(1024 * 1024)
 
 
 @cli.command(
@@ -152,15 +182,14 @@ def search(ctx, page, limit, query, pager):
     results = []
 
     for entry in search_results.results:
-        aip_id = entry["id"]
-        pkg_type = entry["pkg_type"]
-        createdate = entry["createdate"]
         lastmoddate = "N/A"
 
         if "lastmoddate" in entry:
             lastmoddate = entry["lastmoddate"]
 
-        results.append((aip_id, pkg_type, createdate, lastmoddate))
+        results.append(
+            (entry["id"], entry["pkg_type"], entry["createdate"], lastmoddate)
+        )
 
     tabulated = tabulate.tabulate(
         results,
@@ -180,6 +209,10 @@ def search(ctx, page, limit, query, pager):
 
 
 def main():
+    """
+    Main command-line entry point
+    """
+    # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
     cli(obj=Context())
 
 

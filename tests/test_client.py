@@ -1,3 +1,6 @@
+"""
+dpres_access_rest_api_client.client tests
+"""
 import math
 
 import pytest

@@ -1,3 +1,6 @@
+"""
+dpres-access-rest-api-client configuration handling
+"""
 import configparser
 from pathlib import Path
 
@@ -46,6 +49,9 @@ def get_config():
     to 2 and used instead.
     """
     def get_etc_config_text():
+        """
+        Get config content from /etc, if any
+        """
         path = Path("/etc") / "dpres_access_rest_client" / "config.conf"
 
         try:
@@ -54,6 +60,9 @@ def get_config():
             return None
 
     def get_user_config_text():
+        """
+        Get user config content from app config directory, if any
+        """
         path = \
             Path(click.get_app_dir("dpres_access_rest_client")) / "config.conf"
 
@@ -63,6 +72,10 @@ def get_config():
             return None
 
     def get_default_config_text():
+        """
+        Get default config text and create the configuration file if it doesn't
+        exist
+        """
         path = \
             Path(click.get_app_dir("dpres_access_rest_client")) / "config.conf"
         path.parent.mkdir(parents=True, exist_ok=True)

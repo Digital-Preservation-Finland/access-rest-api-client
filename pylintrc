@@ -1,0 +1,5 @@
+[MISCELLANEOUS]
+
+# Only FIXME notes should affect rating. TODOs are used for documenting
+# potential future improvements and changes.
+notes=FIXME

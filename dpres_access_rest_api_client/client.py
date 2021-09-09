@@ -10,9 +10,12 @@ import time
 import warnings
 from pathlib import Path
 
-import requests
 import urllib3
 from urllib3.exceptions import InsecureRequestWarning
+
+import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 from .config import CONFIG
 
@@ -109,6 +112,20 @@ class AccessClient:
             f"dpres-access-rest-api-client/{__version__} "
             f"(github.com/Digital-Preservation-Finland/"
             f"dpres-access-rest-api-client)"
+        )
+
+        retry = Retry(
+            # Retry a total of 5 times
+            total=5,
+            # Backoff factor of 1, meaning each retry will have a doubled delay
+            backoff_factor=1,
+            # Server-side errors will result in retries
+            status_forcelist=[500, 502, 503, 504]
+        )
+
+        # Setup retry policy only for API calls
+        session.mount(
+            config["dpres"]["api_host"], HTTPAdapter(max_retries=retry)
         )
 
         return session

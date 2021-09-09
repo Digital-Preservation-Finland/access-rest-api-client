@@ -13,6 +13,8 @@ import tabulate
 
 from .client import AccessClient, get_poll_interval_iter
 
+from .config import write_default_config
+
 
 # pylint: disable=too-few-public-methods
 class Context:
@@ -27,6 +29,24 @@ def cli(ctx):
     DPRES Access REST API client
     """
     ctx.obj.client = AccessClient()
+
+
+@cli.command(
+    # Define command name for backwards compatibility with Click 6 and older
+    "write-config",
+    help="Write default configuration file"
+)
+def write_config():
+    """
+    Write default configuration file to user's home directory if it doesn't
+    exist
+    """
+    path = write_default_config()
+
+    if path:
+        click.echo(f"Configuration file written to {path}")
+    else:
+        click.echo("Configuration file already exists")
 
 
 @cli.command(help="Download a preserved package from the DPRES service")

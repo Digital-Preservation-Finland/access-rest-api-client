@@ -31,17 +31,15 @@ to be active in order to use dpres-access-rest-api-client.
 Usage
 -----
 
-After you have installed the application, you can test that the application
-is working by running
+After you have installed the application, you can create the configuration
+file by running
 
 ```
-$ access-client --help
+$ access-client write-config
 ```
 
-When the command-line application is launched for the first time, a
-configuration file will be created in the user's configuration directory;
-this is usually `~/.config/dpres-access-rest-api-client/config.conf`. Edit the
-configuration file with the necessary credentials.
+Edit the configuration file with necessary credentials.
+You can also save the configuration file at `/etc/dpres_access_rest_api_client/config.conf` or define the path using the environment variable `ACCESS_REST_API_CLIENT_CONF`.
 
 To search for packages to download, run
 

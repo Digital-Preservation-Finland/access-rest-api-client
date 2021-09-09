@@ -1,6 +1,5 @@
-from pathlib import Path
-
 from configparser import ConfigParser
+from pathlib import Path
 
 import pytest
 
@@ -14,18 +13,26 @@ def testpath(tmpdir):
     return Path(str(tmpdir))
 
 
+@pytest.fixture(scope="function")
+def home_config_path(testpath, monkeypatch):
+    """
+    Path to the user's configuration file in a mocked home directory
+    """
+    home_dir = (testpath / "home" / "testuser")
+    monkeypatch.setenv("HOME", str(home_dir))
+
+    config_dir = home_dir / ".config" / "dpres_access_rest_api_client"
+    config_dir.mkdir(parents=True)
+    return config_dir / "config.conf"
+
+
 @pytest.fixture(scope="function", autouse=True)
-def mock_config(monkeypatch, testpath):
+def mock_config(monkeypatch, home_config_path):
     """
     Create a mock configuration file by mocking the user's home directory
     and placing a configuration file in the expected place
     """
-    home_dir = (testpath / "home" / "testuser")
-    config_dir = home_dir / ".config" / "dpres_access_rest_client"
-    config_dir.mkdir(parents=True)
-
-    config_path = config_dir / "config.conf"
-    config_path.write_text(
+    home_config_path.write_text(
         "[dpres]\n"
         "contract_id=urn:uuid:fake_contract_id\n"
         "username=fakeuser\n"
@@ -34,9 +41,8 @@ def mock_config(monkeypatch, testpath):
     )
 
     config = ConfigParser()
-    config.read(str(config_path))
+    config.read(str(home_config_path))
 
-    monkeypatch.setenv("HOME", str(home_dir))
     monkeypatch.setattr(
         "dpres_access_rest_api_client.client.CONFIG", config
     )

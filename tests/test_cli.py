@@ -15,6 +15,27 @@ def test_help(cli_runner):
     assert "List and search for" in result.output
 
 
+def test_write_config(cli_runner, home_config_path):
+    """
+    Test that `write-config` creates the configuration file
+    """
+    # Remove the existing file and ensure it is regenerated
+    home_config_path.unlink()
+
+    result = cli_runner(["write-config"])
+
+    assert f"Configuration file written to {home_config_path}" in result.output
+    assert home_config_path.is_file()
+    assert "[dpres]" in home_config_path.read_text()
+
+    home_config_path.write_text("overwritten config")
+
+    # If the file exists, nothing is written at all
+    result = cli_runner(["write-config"])
+    assert "Configuration file already exists" in result.output
+    assert home_config_path.read_text() == "overwritten config"
+
+
 def test_search(cli_runner, requests_mock):
     """
     Test that a search can be performed

@@ -228,8 +228,19 @@ class DIPRequest:
         self.catalog = catalog
         self.archive_format = archive_format
 
-        self._poll_url = None
-        self._download_url = None
+        self.dip_id = None
+
+    @property
+    def _poll_url(self):
+        if not self.dip_id:
+            return None
+        return f"{self.base_url}/disseminated/{self.dip_id}"
+
+    @property
+    def _download_url(self):
+        if not self.dip_id:
+            return None
+        return f"{self._poll_url}/download"
 
     @property
     def session(self):
@@ -257,7 +268,10 @@ class DIPRequest:
         """
         Whether the DIP has been disseminated and is ready for download
         """
-        return self._download_url is not None
+        response = self.session.get(self._poll_url)
+        data = response.json()["data"]
+
+        return data["complete"] == "true"
 
     def disseminate(self):
         """
@@ -277,7 +291,7 @@ class DIPRequest:
         )
         data = response.json()["data"]
 
-        self._poll_url = f"{self.host}{data['disseminated']}"
+        self.dip_id = data['disseminated'].split('/')[-1]
 
     def poll(self, block=False):
         """
@@ -291,14 +305,6 @@ class DIPRequest:
         poll_interval_iter = get_poll_interval_iter()
 
         while not self.ready:
-            response = self.session.get(self._poll_url)
-            data = response.json()["data"]
-
-            if data["complete"] == "true":
-                self._download_url = \
-                    f"{self.host}{data['actions']['download']}"
-                break
-
             if not block:
                 break
             else:

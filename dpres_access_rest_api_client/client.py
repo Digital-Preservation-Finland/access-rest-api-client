@@ -304,6 +304,14 @@ class DIPRequest:
 
         return self.session.get(self._download_url, stream=True)
 
+    def delete(self):
+        """
+        Perform a HTTP request to delete the DIP
+        """
+        if not self.ready:
+            raise ValueError("DIP is not ready for deletion")
+        return self.session.delete(self._poll_url)
+
     @property
     @functools.lru_cache()
     def streamed_download_response(self):

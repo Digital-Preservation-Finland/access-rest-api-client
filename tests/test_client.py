@@ -37,6 +37,16 @@ def test_dip_request(testpath, client, requests_mock):
             }
         }
     )
+    requests_mock.delete(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
+        "spam_dip",
+        json={
+            "status": "success",
+            "data": {
+                "deleted": "true",
+            }
+        }
+    )
 
     dip_request = client.create_dip_request("spam", archive_format="zip")
 
@@ -46,8 +56,12 @@ def test_dip_request(testpath, client, requests_mock):
 
     with pytest.raises(ValueError) as exc:
         dip_request.download(download_path)
-
     assert str(exc.value) == "DIP is not ready for download yet"
+
+    # Perform delete DIP request; DIP cannot be deleted yet
+    with pytest.raises(ValueError) as exc:
+        dip_request.delete()
+    assert str(exc.value) == "DIP is not ready for deletion"
 
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
@@ -83,6 +97,9 @@ def test_dip_request(testpath, client, requests_mock):
     assert download_path.is_file()
     assert download_path.read_bytes() == \
         b"This is a complete DIP in a ZIP sent in a blip"
+
+    delete_request = dip_request.delete()
+    assert delete_request.status_code == 200
 
 
 def test_poll_interval_iter():

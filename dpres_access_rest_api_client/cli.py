@@ -74,9 +74,18 @@ def write_config():
         "Defaults to the newest available catalog."
     )
 )
+@click.option(
+    "--skip-delete",
+    type=bool,
+    flag_value=False,
+    default=True,
+    help=(
+        "Don't delete DIP from the DPS server after it has been downloaded. "
+    )
+)
 @click.argument("aip_id")
 @click.pass_context
-def download(ctx, path, archive_format, catalog, aip_id):
+def download(ctx, path, archive_format, catalog, skip_delete, aip_id):
     """
     Download a file and save it to the given path
     """
@@ -107,6 +116,11 @@ def download(ctx, path, archive_format, catalog, aip_id):
     click.echo(f"DIP is available, downloading to {path}...")
 
     _download_save_to_path(dip_request, path)
+
+    click.echo("DIP downloaded, proceeding to delete DIP from server")
+
+    if not skip_delete:
+        dip_request.delete()
 
     click.echo("Done!")
 

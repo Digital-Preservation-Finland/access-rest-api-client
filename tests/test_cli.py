@@ -180,6 +180,16 @@ def test_download(cli_runner, requests_mock, testpath):
             "Content-Length": "46"
         }
     )
+    requests_mock.delete(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
+        "spam_dip",
+        json={
+            "status": "success",
+            "data": {
+                "deleted": "true",
+            }
+        }
+    )
 
     download_dir = testpath / "download"
     download_dir.mkdir()
@@ -199,3 +209,4 @@ def test_download(cli_runner, requests_mock, testpath):
     assert download_path.is_file()
     assert download_path.read_bytes() == \
         b"This is a complete DIP in a ZIP sent in a blip"
+    assert 'delete' in output

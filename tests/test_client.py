@@ -98,8 +98,9 @@ def test_dip_request(testpath, client, requests_mock):
     assert download_path.read_bytes() == \
         b"This is a complete DIP in a ZIP sent in a blip"
 
+    # DIP deletion should now return True
     delete_request = dip_request.delete()
-    assert delete_request.status_code == 200
+    assert delete_request is True
 
 
 def test_poll_interval_iter():

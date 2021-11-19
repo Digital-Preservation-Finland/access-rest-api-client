@@ -306,11 +306,17 @@ class DIPRequest:
 
     def delete(self):
         """
-        Perform a HTTP request to delete the DIP
+        Perform a HTTP request to delete the DIP from the DPRES
+        service.
+
+        :returns: True if DIP was deleted, False otherwise
         """
         if not self.ready:
             raise ValueError("DIP is not ready for deletion")
-        return self.session.delete(self._poll_url)
+        response = self.session.delete(self._poll_url)
+        data = response.json()["data"]
+
+        return data["deleted"] == "true"
 
     @property
     @functools.lru_cache()

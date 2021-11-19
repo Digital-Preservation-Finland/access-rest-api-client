@@ -316,7 +316,11 @@ class DIPRequest:
         response = self.session.delete(self._poll_url)
         data = response.json()["data"]
 
-        return data["deleted"] == "true"
+        try:
+            return data["deleted"] == "true"
+        # Error responses might not be JSON or contain the "deleted" key
+        except KeyError, TypeError:
+            return False
 
     @property
     @functools.lru_cache()

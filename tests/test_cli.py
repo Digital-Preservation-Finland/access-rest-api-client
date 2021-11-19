@@ -209,4 +209,6 @@ def test_download(cli_runner, requests_mock, testpath):
     assert download_path.is_file()
     assert download_path.read_bytes() == \
         b"This is a complete DIP in a ZIP sent in a blip"
+
+    # DIP deletion should default to True
     assert 'delete' in output

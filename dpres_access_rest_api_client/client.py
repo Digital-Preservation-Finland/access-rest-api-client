@@ -319,7 +319,7 @@ class DIPRequest:
         try:
             return data["deleted"] == "true"
         # Error responses might not be JSON or contain the "deleted" key
-        except KeyError, TypeError:
+        except (KeyError, TypeError):
             return False
 
     @property

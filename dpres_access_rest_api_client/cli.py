@@ -241,6 +241,28 @@ def search(ctx, page, limit, query, pager):
     echo_func(output)
 
 
+@cli.command(
+    help="Delete a completed DIP from the DPRES service"
+)
+@click.argument("dip_id")
+@click.pass_context
+def delete(ctx, dip_id):
+    """
+    Delete a completed DIP from the DPRES service.
+    """
+    client = ctx.obj.client
+
+    click.echo("")
+    click.echo("Proceeding to delete DIP from the service...")
+
+    dip_deleted = client.delete_dissemination(dip_id=dip_id)
+
+    if not dip_deleted:
+        click.echo("DIP could not be deleted from the service.")
+
+    click.echo("Done!")
+
+
 def main():
     """
     Main command-line entry point

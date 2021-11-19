@@ -48,6 +48,25 @@ def get_poll_interval_iter():
         yield last_interval + (random.random() * 0.5)  # nosec
 
 
+def parse_delete_dip_response(response):
+    """
+    Parses the DELETE DIP response from the service and return a
+    boolean of whether the DIP was deleted or not.
+
+    :param response: A HTTP response
+    :returns: True if DIP was deleted, False otherwise
+    """
+    data = response.json()["data"]
+
+    try:
+        return data["deleted"] == "true"
+    # Error responses might not be JSON or contain the "deleted" key
+    # An HTTPError should be raised by the client in case of client or server
+    # errors, but we'll still handle exceptions here just in case.
+    except (KeyError, TypeError):
+        return False
+
+
 class AccessClient:
     """
     Client for accessing the Digital Preservation Service REST API
@@ -189,6 +208,17 @@ class AccessClient:
 
         return dip_request
 
+    def delete_dissemination(self, dip_id):
+        """
+        Delete a completed DIP from the DPRES service.
+
+        :param dip_id: Identifier of the DIP to delete
+        """
+        response = self.session.delete(
+            f"{self.base_url}/disseminated/{dip_id}"
+        )
+        return parse_delete_dip_response(response)
+
 
 class DIPRequest:
     """
@@ -314,13 +344,7 @@ class DIPRequest:
         if not self.ready:
             raise ValueError("DIP is not ready for deletion")
         response = self.session.delete(self._poll_url)
-        data = response.json()["data"]
-
-        try:
-            return data["deleted"] == "true"
-        # Error responses might not be JSON or contain the "deleted" key
-        except (KeyError, TypeError):
-            return False
+        return parse_delete_dip_response(response)
 
     @property
     @functools.lru_cache()

@@ -212,3 +212,41 @@ def test_download(cli_runner, requests_mock, testpath):
 
     # DIP deletion should default to True
     assert 'delete' in output
+
+
+def test_delete_dip_query(cli_runner, requests_mock):
+    """
+    Test performing DIP deletion with both a successful deletion
+    and an unsuccessful deletion.
+    """
+    requests_mock.delete(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
+        "spam_dip",
+        json={
+            "status": "success",
+            "data": {
+                "deleted": "true",
+            }
+        }
+    )
+    requests_mock.delete(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
+        "not_found_dip",
+        json={
+            "status": "success",
+            "data": {
+                "deleted": "false",
+            }
+        },
+    )
+
+    # Successful deletion
+    result = cli_runner(["delete", "spam_dip"])
+    output = result.output
+    assert "Proceeding to delete" in output
+
+    # Unsuccessful deletion
+    result = cli_runner(["delete", "not_found_dip"])
+    output = result.output
+    assert "Proceeding to delete" in output
+    assert "DIP could not be deleted" in output

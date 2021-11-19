@@ -76,7 +76,6 @@ def write_config():
 )
 @click.option(
     "--delete/--no-delete",
-    type=bool,
     default=True,
     help=(
         "Delete the DIP from the DPRES service after it has been downloaded. "

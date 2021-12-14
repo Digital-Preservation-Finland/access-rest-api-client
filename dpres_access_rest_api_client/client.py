@@ -61,8 +61,7 @@ class AccessClient:
 
         # Normalize host by removing the trailing slash
         self.host = config["dpres"]["api_host"].rstrip("/")
-        self.base_url = \
-            f"{self.host}/api/2.0/{config['dpres']['contract_id']}"
+        self.contract_id = config['dpres'].get('contract_id', None)
 
         self.session = self._create_session(config=config)
 
@@ -129,6 +128,13 @@ class AccessClient:
         )
 
         return session
+
+    @property
+    def base_url(self):
+        """Return base URL for API requests."""
+        if not self.contract_id:
+            raise ValueError("Contract identifier is not defined.")
+        return f"{self.host}/api/2.0/{self.contract_id}"
 
     def search(self, page=1, limit=1000, query=None):
         """

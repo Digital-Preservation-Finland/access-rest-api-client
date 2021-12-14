@@ -103,6 +103,14 @@ def test_dip_request(testpath, client, requests_mock):
     assert delete_request is True
 
 
+def test_contract_id_change(client):
+    """Test that contract identifier used in requests can be changed."""
+    assert client.base_url \
+        == 'http://fakeapi/api/2.0/urn:uuid:fake_contract_id'
+    client.contract_id = "another_contract_id"
+    assert client.base_url == 'http://fakeapi/api/2.0/another_contract_id'
+
+
 def test_poll_interval_iter():
     """
     Test that poll interval iterator returns poll intervals in the expected

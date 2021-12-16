@@ -148,7 +148,7 @@ def _download_poll_until_ready(dip_request):
 
         if poll_interval < 0:
             # Poll every 3 seconds
-            dip_request.poll()
+            dip_request.check_status()
             poll_interval = next(poll_interval_iter)
         else:
             poll_interval -= 0.25

@@ -290,12 +290,12 @@ class DIPRequest:
 
         self.dip_id = data['disseminated'].split('/')[-1]
 
-    def poll(self, block=False):
+    def check_status(self, poll=False):
         """
         Check if the DIP has been generated and is ready for download.
 
-        :param bool block: Whether to poll until the DIP is ready for download.
-                           Default is False.
+        :param bool poll: Whether to poll until the DIP is ready for download.
+                          Default is False.
 
         :returns: True if DIP is ready for download, False otherwise
         """
@@ -311,10 +311,10 @@ class DIPRequest:
 
             self.ready = False
 
-            if not block:
-                break
-            else:
+            if poll:
                 time.sleep(next(poll_interval_iter))
+            else:
+                break
 
         return self.ready
 

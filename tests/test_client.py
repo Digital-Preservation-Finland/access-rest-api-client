@@ -51,7 +51,7 @@ def test_dip_request(testpath, client, requests_mock):
     dip_request = client.create_dip_request("spam", archive_format="zip")
 
     # Perform the first poll request; DIP is not yet ready
-    assert not dip_request.poll()
+    assert not dip_request.check_status()
     assert not dip_request.ready
 
     with pytest.raises(ValueError) as exc:
@@ -91,7 +91,7 @@ def test_dip_request(testpath, client, requests_mock):
     )
 
     # Second poll reuest; DIP is now ready
-    assert dip_request.poll()
+    assert dip_request.check_status()
     dip_request.download(download_path)
 
     assert download_path.is_file()

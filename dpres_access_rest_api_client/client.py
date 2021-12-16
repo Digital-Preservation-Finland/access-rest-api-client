@@ -130,11 +130,16 @@ class AccessClient:
         return session
 
     @property
+    def api_url(self):
+        """Return API url."""
+        return f"{self.host}/api/2.0"
+
+    @property
     def base_url(self):
-        """Return base URL for API requests."""
+        """Return base URL for current contract."""
         if not self.contract_id:
             raise ValueError("Contract identifier is not defined.")
-        return f"{self.host}/api/2.0/{self.contract_id}"
+        return f"{self.api_url}/{self.contract_id}"
 
     def search(self, page=1, limit=1000, query=None):
         """
@@ -230,6 +235,7 @@ class DIPRequest:
             by calling `DIPRequest.disseminate()`
         """
         self.client = client
+        self.contract_id = client.contract_id
         self.aip_id = aip_id
         self.catalog = catalog
         self.archive_format = archive_format
@@ -266,9 +272,9 @@ class DIPRequest:
     @property
     def base_url(self):
         """
-        Client's base URL
+        Base url for contract of requested DIP.
         """
-        return self.client.base_url
+        return f"{self.client.api_url}/{self.contract_id}"
 
     def disseminate(self):
         """

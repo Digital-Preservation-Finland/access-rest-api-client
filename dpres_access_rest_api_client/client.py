@@ -234,6 +234,7 @@ class DIPRequest:
         self.catalog = catalog
         self.archive_format = archive_format
 
+        self.ready = None
         self.dip_id = None
 
     @property
@@ -269,16 +270,6 @@ class DIPRequest:
         """
         return self.client.base_url
 
-    @property
-    def ready(self):
-        """
-        Whether the DIP has been disseminated and is ready for download
-        """
-        response = self.session.get(self._poll_url)
-        data = response.json()["data"]
-
-        return data["complete"] == "true"
-
     def disseminate(self):
         """
         Send a dissemination request to the REST API.
@@ -311,6 +302,15 @@ class DIPRequest:
         poll_interval_iter = get_poll_interval_iter()
 
         while not self.ready:
+            response = self.session.get(self._poll_url)
+            data = response.json()["data"]
+
+            if data["complete"] == "true":
+                self.ready = True
+                break
+
+            self.ready = False
+
             if not block:
                 break
             else:

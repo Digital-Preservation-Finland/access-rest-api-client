@@ -103,6 +103,12 @@ def test_dip_request(testpath, client, requests_mock):
     assert delete_request is True
 
 
+def test_host_change(client):
+    """Test that host can not be changed."""
+    with pytest.raises(Exception):
+        client.host = "new_host"
+
+
 def test_contract_id_change(client):
     """Test that contract identifier used in requests can be changed."""
     assert client.base_url \

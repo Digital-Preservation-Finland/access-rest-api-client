@@ -59,8 +59,10 @@ class AccessClient:
         if not config:
             config = CONFIG
 
-        # Normalize host by removing the trailing slash
-        self.host = config["dpres"]["api_host"].rstrip("/")
+        # Normalize host by removing the trailing slash. Host is
+        # read-only attribute, since changing the host while polling a
+        # DIP would cause problems.
+        self._host = config["dpres"]["api_host"].rstrip("/")
         self.contract_id = config['dpres'].get('contract_id', None)
 
         self.session = self._create_session(config=config)
@@ -128,6 +130,11 @@ class AccessClient:
         )
 
         return session
+
+    @property
+    def host(self):
+        """Return API host."""
+        return self._host
 
     @property
     def api_url(self):

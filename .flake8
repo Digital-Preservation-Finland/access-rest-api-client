@@ -4,6 +4,3 @@
 # instead.
 ignore =
     E125
-    D200
-    D400
-    D205

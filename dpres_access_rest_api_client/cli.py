@@ -13,7 +13,7 @@ import tabulate
 
 from .client import AccessClient, get_poll_interval_iter
 
-from .config import write_default_config
+from .config import write_default_config, CONFIG
 
 
 # pylint: disable=too-few-public-methods
@@ -23,12 +23,25 @@ class Context:
 
 
 @click.group()
+@click.option(
+    "--contract",
+    type=str,
+    help=("Contract identifier which restricts the scope to the content"
+          " to a particular DPS contract.")
+)
 @click.pass_context
-def cli(ctx):
+def cli(ctx, contract):
     """
     DPRES Access REST API client
     """
-    ctx.obj.client = AccessClient()
+    ctx.obj.contract = contract or CONFIG['dpres']['contract_id']
+
+    ctx.obj.client = AccessClient(
+        CONFIG["dpres"]["api_host"],
+        CONFIG["dpres"]["username"],
+        CONFIG["dpres"]["password"],
+        CONFIG['dpres'].getboolean('verify_ssl')
+    )
 
 
 @cli.command(
@@ -104,7 +117,9 @@ def download(ctx, path, archive_format, catalog, delete, aip_id):
     # This prevents the creation of new redundant DIP on the server-side.
 
     dip_request = client.create_dip_request(
-        aip_id=aip_id, archive_format=archive_format,
+        contract_id=ctx.obj.contract,
+        aip_id=aip_id,
+        archive_format=archive_format,
         catalog=catalog
     )
 
@@ -211,7 +226,10 @@ def search(ctx, page, limit, query, pager):
     client = ctx.obj.client
     echo_func = click.echo_via_pager if pager else click.echo
 
-    search_results = client.search(page=page, limit=limit, query=query)
+    search_results = client.search(page=page,
+                                   contract_id=ctx.obj.contract,
+                                   limit=limit,
+                                   query=query)
     results = []
 
     for entry in search_results.results:

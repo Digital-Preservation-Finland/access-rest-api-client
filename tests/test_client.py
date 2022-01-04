@@ -48,7 +48,9 @@ def test_dip_request(testpath, client, requests_mock):
         }
     )
 
-    dip_request = client.create_dip_request("spam", archive_format="zip")
+    dip_request = client.create_dip_request("urn:uuid:fake_contract_id",
+                                            "spam",
+                                            archive_format="zip")
 
     # Perform the first poll request; DIP is not yet ready
     assert not dip_request.check_status()
@@ -107,31 +109,6 @@ def test_host_change(client):
     """Test that host can not be changed."""
     with pytest.raises(Exception):
         client.host = "new_host"
-
-
-def test_contract_id_change(client):
-    """Test that contract identifier used in requests can be changed."""
-    assert client.base_url \
-        == 'http://fakeapi/api/2.0/urn:uuid:fake_contract_id'
-
-    client.contract_id = "new_contract_id"
-    assert client.base_url == 'http://fakeapi/api/2.0/new_contract_id'
-
-
-def test_dip_request_contract_id_change(client, requests_mock):
-    """Test that contract id change does not affect existing DIP requests."""
-    requests_mock.post('http://fakeapi/api/2.0/urn:uuid:fake_contract_id/'
-                       'preserved/foo/disseminate',
-                       json={'data': {'disseminated': 'foo'}})
-
-    # Create a DIP request and check the base URL
-    dip_request = client.create_dip_request('foo')
-    original_url = dip_request.base_url
-
-    # Change contract identifier of client and ensure that the base URL
-    # of DIP request did not change
-    client.contract_id = "new_contract_id"
-    assert dip_request.base_url == original_url
 
 
 def test_poll_interval_iter():

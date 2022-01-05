@@ -181,12 +181,17 @@ class AccessClient:
         :param str archive_format: Archive format used for the disseminated
                                    DIP. Default is 'zip'.
         """
+        parameters = {}
+        if catalog:
+            parameters["catalog"] = catalog
+        if archive_format:
+            parameters["format"] = archive_format
+
         dip_request = DIPRequest(
             client=self,
             contract_id=contract_id,
             aip_id=aip_id,
-            catalog=catalog,
-            archive_format=archive_format
+            parameters=parameters
         )
         dip_request.disseminate()
 
@@ -209,19 +214,13 @@ class DIPRequest:
     """
     Object used to perform a DIP dissemination and download
     """
-    def __init__(self, client, contract_id, aip_id, catalog=None,
-                 archive_format="zip"):
+    def __init__(self, client, contract_id, aip_id, parameters=None):
         """
         Create a DIPRequest.
 
         :param str contract_id: Contract identifier
         :param str aip_id: Identifier of the AIP to download
-        :param str catalog: Optional schema catalog used to disseminate the
-                            AIP. Newest available schema catalog is used by
-                            default.
-        :param str archive_format: Archive format used for the
-                                   disseminated DIP.
-                                   Default is 'zip'.
+        :param dict parameters: Parameters to specify a DIP format.
 
         .. note::
 
@@ -231,8 +230,7 @@ class DIPRequest:
         self.client = client
         self.contract_id = contract_id
         self.aip_id = aip_id
-        self.catalog = catalog
-        self.archive_format = archive_format
+        self.parameters = parameters
 
         self.ready = None
         self.dip_id = None
@@ -274,17 +272,11 @@ class DIPRequest:
         """
         Send a dissemination request to the REST API.
         """
-        params = {}
-
-        if self.catalog:
-            params["catalog"] = self.catalog
-
-        if self.archive_format:
-            params["format"] = self.archive_format
+        parameters = self.parameters or {}
 
         response = self.session.post(
             f"{self.base_url}/preserved/{self.aip_id}/disseminate",
-            params=params
+            params=parameters
         )
         data = response.json()["data"]
 

@@ -17,6 +17,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
+from .config import CONFIG
 
 SearchResult = collections.namedtuple(
     "SearchResult",
@@ -51,30 +52,45 @@ class AccessClient:
     """
     Client for accessing the Digital Preservation Service REST API
     """
-    def __init__(self, host, username, password, verify=True):
+    def __init__(self, config=None):
         """
         Create the AccessClient instance
         """
+        if not config:
+            config = CONFIG
+
         # Normalize host by removing the trailing slash. Host is
         # read-only attribute, since changing the host while polling a
         # DIP would cause problems.
-        self._host = host.rstrip("/")
+        self._host = config["dpres"]["api_host"].rstrip("/")
+        self.base_url = \
+            f"{self.host}/api/2.0/{config['dpres']['contract_id']}"
 
-        self.session = self._create_session(host, username, password, verify)
+        self.session = self._create_session(config=config)
+
+    @property
+    def host(self):
+        """Return API host."""
+        return self._host
 
     @classmethod
-    def _create_session(cls, host, username, password, verify):
+    def _create_session(cls, config=None):
         """
-        Create self.session
+        Create self.session based on the provided configuration
         """
         from dpres_access_rest_api_client import __version__
 
+        if not config:
+            config = CONFIG
+
         session = requests.Session()
 
-        session.auth = (username, password)
+        session.auth = (
+            config["dpres"]["username"], config["dpres"]["password"]
+        )
 
         # Disable SSL verification depending on user config
-        session.verify = verify
+        session.verify = config['dpres'].getboolean('verify_ssl')
 
         if not session.verify:
             warnings.warn(
@@ -115,25 +131,16 @@ class AccessClient:
         )
 
         # Setup retry policy only for API calls
-        session.mount(host, HTTPAdapter(max_retries=retry))
+        session.mount(
+            config["dpres"]["api_host"], HTTPAdapter(max_retries=retry)
+        )
 
         return session
 
-    @property
-    def host(self):
-        """Return API host."""
-        return self._host
-
-    @property
-    def base_url(self):
-        """Return API url."""
-        return f"{self.host}/api/2.0"
-
-    def search(self, contract_id, page=1, limit=1000, query=None):
+    def search(self, page=1, limit=1000, query=None):
         """
         Perform a search for packages and return a SearchResult
 
-        :param str contract_id: Contract identifier
         :param int page: Search result page.
                          Defaults to 1 (i.e. the first page).
         :param int limit: Maximum amount of search results per page
@@ -149,7 +156,7 @@ class AccessClient:
             params["q"] = query
 
         response = self.session.get(
-            f"{self.base_url}/{contract_id}/search",
+            f"{self.base_url}/search",
             params=params
         )
         data = response.json()["data"]
@@ -166,14 +173,12 @@ class AccessClient:
             results=data["results"], prev_url=prev_url, next_url=next_url
         )
 
-    def create_dip_request(self, contract_id, aip_id, catalog=None,
-                           archive_format=None):
+    def create_dip_request(self, aip_id, catalog=None, archive_format=None):
         """
         Start a dissemination request and return a DIPRequest
         object that can be used to poll for the created DIP and eventually
         download it.
 
-        :param str contract_id: Contract identifier
         :param str aip_id: Identifier of the AIP to download
         :param str catalog: Optional schema catalog used to disseminate
                             the AIP.
@@ -181,17 +186,11 @@ class AccessClient:
         :param str archive_format: Archive format used for the disseminated
                                    DIP. Default is 'zip'.
         """
-        parameters = {}
-        if catalog:
-            parameters["catalog"] = catalog
-        if archive_format:
-            parameters["format"] = archive_format
-
         dip_request = DIPRequest(
             client=self,
-            contract_id=contract_id,
             aip_id=aip_id,
-            parameters=parameters
+            catalog=catalog,
+            archive_format=archive_format
         )
         dip_request.disseminate()
 
@@ -214,13 +213,17 @@ class DIPRequest:
     """
     Object used to perform a DIP dissemination and download
     """
-    def __init__(self, client, contract_id, aip_id, parameters=None):
+    def __init__(self, client, aip_id, catalog=None, archive_format="zip"):
         """
         Create a DIPRequest.
 
-        :param str contract_id: Contract identifier
         :param str aip_id: Identifier of the AIP to download
-        :param dict parameters: Parameters to specify a DIP format.
+        :param str catalog: Optional schema catalog used to disseminate the
+                            AIP. Newest available schema catalog is used by
+                            default.
+        :param str archive_format: Archive format used for the
+                                   disseminated DIP.
+                                   Default is 'zip'.
 
         .. note::
 
@@ -228,9 +231,9 @@ class DIPRequest:
             by calling `DIPRequest.disseminate()`
         """
         self.client = client
-        self.contract_id = contract_id
         self.aip_id = aip_id
-        self.parameters = parameters
+        self.catalog = catalog
+        self.archive_format = archive_format
 
         self.ready = None
         self.dip_id = None
@@ -264,19 +267,25 @@ class DIPRequest:
     @property
     def base_url(self):
         """
-        Base url for contract of requested DIP.
+        Client's base URL
         """
-        return f"{self.client.base_url}/{self.contract_id}"
+        return self.client.base_url
 
     def disseminate(self):
         """
         Send a dissemination request to the REST API.
         """
-        parameters = self.parameters or {}
+        params = {}
+
+        if self.catalog:
+            params["catalog"] = self.catalog
+
+        if self.archive_format:
+            params["format"] = self.archive_format
 
         response = self.session.post(
             f"{self.base_url}/preserved/{self.aip_id}/disseminate",
-            params=parameters
+            params=params
         )
         data = response.json()["data"]
 

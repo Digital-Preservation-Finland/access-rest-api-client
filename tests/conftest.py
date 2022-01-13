@@ -44,7 +44,7 @@ def mock_config(monkeypatch, home_config_path):
     config.read(str(home_config_path))
 
     monkeypatch.setattr(
-        "dpres_access_rest_api_client.config.CONFIG", config
+        "dpres_access_rest_api_client.client.CONFIG", config
     )
 
     return config
@@ -81,8 +81,6 @@ def client(mock_config):
     """
     from dpres_access_rest_api_client.client import AccessClient
 
-    client = AccessClient(mock_config['dpres']['api_host'],
-                          mock_config['dpres']['username'],
-                          mock_config['dpres']['password'])
+    client = AccessClient(config=mock_config)
 
     return client

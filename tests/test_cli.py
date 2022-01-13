@@ -2,8 +2,6 @@
 dpres_access_rest_api_client.cli tests
 """
 from urllib.parse import urlencode
-import pytest
-import requests.exceptions
 
 
 def test_help(cli_runner):
@@ -137,31 +135,6 @@ def test_search_query(cli_runner, requests_mock):
 
     assert "eggs" in output
     assert "spam" not in output
-
-
-def test_contract(cli_runner, requests_mock):
-    """Test --contract parameter.
-
-    The default contract identifier in configuration file should be
-    overridden if --contract parameter is used.
-    """
-    contract = 'custom-contract-id'
-
-    default_contract_response = requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/search",
-        status_code=418
-    )
-
-    custom_contract_response = requests_mock.get(
-        f"http://fakeapi/api/2.0/{contract}/search",
-        status_code=418
-    )
-
-    with pytest.raises(requests.exceptions.HTTPError):
-        cli_runner(['--contract', contract, "search"])
-
-    assert not default_contract_response.called_once
-    assert custom_contract_response.called_once
 
 
 def test_download(cli_runner, requests_mock, testpath):

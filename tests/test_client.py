@@ -48,9 +48,7 @@ def test_dip_request(testpath, client, requests_mock):
         }
     )
 
-    dip_request = client.create_dip_request("urn:uuid:fake_contract_id",
-                                            "spam",
-                                            archive_format="zip")
+    dip_request = client.create_dip_request("spam", archive_format="zip")
 
     # Perform the first poll request; DIP is not yet ready
     assert not dip_request.check_status()

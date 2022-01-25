@@ -7,6 +7,7 @@ import collections
 import functools
 import random
 import time
+from urllib.parse import quote
 import warnings
 from pathlib import Path
 
@@ -207,6 +208,41 @@ class AccessClient:
         )
         data = response.json()["data"]
         return data["deleted"] == "true"
+
+    def get_ingest_report_entries(self, sip_id):
+        """
+        Get all the ingest report entries created for a package.
+
+        :param sip_id: SIP identifier of the package
+
+        :returns: Entries of all ingest reports created for a package
+                  as a list of dicts.
+        """
+        sip_id = quote(sip_id, safe="")
+        url = f"{self.base_url}/ingest/report/{sip_id}"
+        response = self.session.get(url)
+        return response.json()["data"]["results"]
+
+    def get_ingest_report(self, sip_id, transfer_id, file_type):
+        """
+        Get the specified ingest report of a package.
+
+        :param sip_id: SIP identifier
+        :param transfer_id: Transfer id
+        :param file_type: File format to be returned, either "xml" or "html"
+
+        :returns: The ingest report as a byte string
+        """
+        if file_type not in ["xml", "html"]:
+            raise ValueError(f"Invalid file type '{file_type}': Only 'xml' "
+                             "and 'html' file formats are accepted")
+
+        sip_id = quote(sip_id, safe="")
+        transfer_id = quote(transfer_id, safe="")
+        url = (f"{self.base_url}/ingest/report/{sip_id}/{transfer_id}"
+               f"?type={file_type}")
+        response = self.session.get(url)
+        return response.content
 
 
 class DIPRequest:

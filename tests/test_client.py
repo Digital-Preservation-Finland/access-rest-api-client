@@ -127,3 +127,83 @@ def test_poll_interval_iter():
     for _ in range(0, 10):
         # ..and the last value of 60 seconds is repeated forever
         assert math.isclose(next(poll_interval_iter), 60, abs_tol=0.5)
+
+
+def test_get_ingest_report_entries(client, requests_mock):
+    """
+    Test that list of ingest report entries are returned for given objid
+    """
+    reports = [
+        {
+            "date": "2022-01-01T00:00:00Z",
+            "download": {
+                "html": ("/api/2.0/urn:uuid:fake_contract_id"
+                         "/ingest/report/doi:fake_id/"
+                         "fake_transfer_id_1?type=html"),
+                "xml": ("/api/2.0/urn:uuid:fake_contract_id"
+                        "/ingest/report/doi:fake_id/"
+                        "fake_transfer_id_1?type=xml")
+            },
+            "id": "fake_transfer_id_1",
+            "status": "accepted"
+        },
+        {
+            "date": "2022-01-02T00:00:00Z",
+            "download": {
+                "html": ("/api/2.0/urn:uuid:fake_contract_id"
+                         "/ingest/report/doi:fake_id/"
+                         "fake_transfer_id_2?type=html"),
+                "xml": ("/api/2.0/urn:uuid:fake_contract_id"
+                        "/ingest/report/doi:fake_id/"
+                        "fake_transfer_id_2?type=xml")
+            },
+            "id": "fake_transfer_id_2",
+            "status": "rejected"
+        }
+    ]
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id",
+        json={
+            "status": "success",
+            "data": {
+                "results": reports
+            }
+        }
+    )
+    result = client.get_ingest_report_entries("doi:fake_id")
+    assert result == reports
+
+
+def test_get_ingest_report(client, requests_mock):
+    """
+    Test that ingest report is returned for given id with correct file type
+    """
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id?type=html",
+        content=b"html ingest report"
+    )
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id?type=xml",
+        content=b"xml ingest report"
+    )
+
+    html_report = client.get_ingest_report("doi:fake_id", "fake_transfer_id",
+                                           "html")
+    xml_report = client.get_ingest_report("doi:fake_id", "fake_transfer_id",
+                                           "xml")
+
+    assert html_report == b"html ingest report"
+    assert xml_report == b"xml ingest report"
+
+
+def test_invalid_ingest_report_file_type(client):
+    """
+    Test that trying to get ingest report with an invalid file type raises
+    ValueError
+    """
+    with pytest.raises(ValueError) as error:
+        client.get_ingest_report("sip_id", "transfer_id", "invalid_file_type")
+    assert "Invalid file type 'invalid_file_type'" in str(error.value)

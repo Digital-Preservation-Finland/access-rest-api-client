@@ -2,6 +2,7 @@
 dpres_access_rest_api_client.client tests
 """
 import math
+from datetime import datetime, timezone
 
 import pytest
 
@@ -131,48 +132,61 @@ def test_poll_interval_iter():
 
 def test_get_ingest_report_entries(client, requests_mock):
     """
-    Test that list of ingest report entries are returned for given objid
+    Test that list of ingest report entries are returned for given sip_id
+    in correctly modified form
     """
-    reports = [
-        {
-            "date": "2022-01-01T00:00:00Z",
-            "download": {
-                "html": ("/api/2.0/urn:uuid:fake_contract_id"
-                         "/ingest/report/doi:fake_id/"
-                         "fake_transfer_id_1?type=html"),
-                "xml": ("/api/2.0/urn:uuid:fake_contract_id"
-                        "/ingest/report/doi:fake_id/"
-                        "fake_transfer_id_1?type=xml")
-            },
-            "id": "fake_transfer_id_1",
-            "status": "accepted"
-        },
-        {
-            "date": "2022-01-02T00:00:00Z",
-            "download": {
-                "html": ("/api/2.0/urn:uuid:fake_contract_id"
-                         "/ingest/report/doi:fake_id/"
-                         "fake_transfer_id_2?type=html"),
-                "xml": ("/api/2.0/urn:uuid:fake_contract_id"
-                        "/ingest/report/doi:fake_id/"
-                        "fake_transfer_id_2?type=xml")
-            },
-            "id": "fake_transfer_id_2",
-            "status": "rejected"
-        }
-    ]
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
         "doi%3Afake_id",
         json={
             "status": "success",
             "data": {
-                "results": reports
+                "results": [
+                    {
+                        "date": "2022-01-01T00:00:00Z",
+                        "download": {
+                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
+                                     "/ingest/report/doi:fake_id/"
+                                     "fake_transfer_id_1?type=html"),
+                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
+                                    "/ingest/report/doi:fake_id/"
+                                    "fake_transfer_id_1?type=xml")
+                        },
+                        "id": "fake_transfer_id_1",
+                        "status": "accepted"
+                    },
+                    {
+                        "date": "2022-01-02T00:00:00Z",
+                        "download": {
+                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
+                                     "/ingest/report/doi:fake_id/"
+                                     "fake_transfer_id_2?type=html"),
+                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
+                                    "/ingest/report/doi:fake_id/"
+                                    "fake_transfer_id_2?type=xml")
+                        },
+                        "id": "fake_transfer_id_2",
+                        "status": "rejected"
+                    }
+                ]
             }
         }
     )
-    result = client.get_ingest_report_entries("doi:fake_id")
-    assert result == reports
+    correct_result = [
+        {
+            "date": datetime(2022, 1, 1, tzinfo=timezone.utc),
+            "transfer_id": "fake_transfer_id_1",
+            "status": "accepted"
+        },
+        {
+            "date": datetime(2022, 1, 2, tzinfo=timezone.utc),
+            "transfer_id": "fake_transfer_id_2",
+            "status": "rejected"
+        }
+    ]
+
+    received_entries = client.get_ingest_report_entries("doi:fake_id")
+    assert received_entries == correct_result
 
 
 def test_get_ingest_report(client, requests_mock):

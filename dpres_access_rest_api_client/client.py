@@ -4,6 +4,7 @@ Preservation Services REST API.
 """
 
 import collections
+from datetime import datetime, timezone
 import functools
 import random
 import time
@@ -221,7 +222,17 @@ class AccessClient:
         sip_id = quote(sip_id, safe="")
         url = f"{self.base_url}/ingest/report/{sip_id}"
         response = self.session.get(url)
-        return response.json()["data"]["results"]
+        entries = response.json()["data"]["results"]
+
+        # Modify entries to be more user-friendly
+        for entry in entries:
+            entry.pop("download")
+            entry["transfer_id"] = entry.pop("id")
+            entry["date"] = datetime.strptime(entry["date"],
+                                              '%Y-%m-%dT%H:%M:%SZ')
+            entry["date"] = entry["date"].replace(tzinfo=timezone.utc)
+
+        return entries
 
     def get_ingest_report(self, sip_id, transfer_id, file_type):
         """
@@ -260,7 +271,7 @@ class AccessClient:
             return None
 
         latest = max(report_entries, key=lambda entry: entry["date"])
-        return self.get_ingest_report(sip_id, latest["id"], file_type)
+        return self.get_ingest_report(sip_id, latest["transfer_id"], file_type)
 
 
 class DIPRequest:

@@ -244,6 +244,24 @@ class AccessClient:
         response = self.session.get(url)
         return response.content
 
+    def get_latest_ingest_report(self, sip_id, file_type):
+        """
+        Get the latest ingest report created for a package.
+
+        :param sip_id: SIP identifier
+        :param file_type: File format to be returned, either "xml" or "html"
+
+        :returns: The latest ingest report created for the package as a byte
+                  string, or None if no reports are found
+        """
+        report_entries = self.get_ingest_report_entries(sip_id)
+
+        if not report_entries:
+            return None
+
+        latest = max(report_entries, key=lambda entry: entry["date"])
+        return self.get_ingest_report(sip_id, latest["id"], file_type)
+
 
 class DIPRequest:
     """

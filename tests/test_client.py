@@ -193,7 +193,7 @@ def test_get_ingest_report(client, requests_mock):
     html_report = client.get_ingest_report("doi:fake_id", "fake_transfer_id",
                                            "html")
     xml_report = client.get_ingest_report("doi:fake_id", "fake_transfer_id",
-                                           "xml")
+                                          "xml")
 
     assert html_report == b"html ingest report"
     assert xml_report == b"xml ingest report"
@@ -207,3 +207,98 @@ def test_invalid_ingest_report_file_type(client):
     with pytest.raises(ValueError) as error:
         client.get_ingest_report("sip_id", "transfer_id", "invalid_file_type")
     assert "Invalid file type 'invalid_file_type'" in str(error.value)
+
+
+def test_get_latest_ingest_report(client, requests_mock):
+    """
+    Test that the latest ingest report is returned when there exists many
+    ingest reports for a package.
+    """
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id",
+        json={
+            "status": "success",
+            "data": {
+                "results": [
+                    {
+                        "date": "1980-01-01T00:00:00Z",
+                        "download": {
+                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
+                                     "/ingest/report/doi:fake_id/"
+                                     "fake_transfer_id_1?type=html"),
+                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
+                                    "/ingest/report/doi:fake_id/"
+                                    "fake_transfer_id_1?type=xml")
+                        },
+                        "id": "fake_transfer_id_1",
+                        "status": "accepted"
+                    },
+                    {
+                        "date": "2000-01-01T00:00:00Z",
+                        "download": {
+                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
+                                     "/ingest/report/doi:fake_id/"
+                                     "fake_transfer_id_2?type=html"),
+                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
+                                    "/ingest/report/doi:fake_id/"
+                                    "fake_transfer_id_2?type=xml")
+                        },
+                        "id": "fake_transfer_id_2",
+                        "status": "rejected"
+                    },
+                    {
+                        "date": "1990-01-01T00:00:00Z",
+                        "download": {
+                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
+                                     "/ingest/report/doi:fake_id/"
+                                     "fake_transfer_id_3?type=html"),
+                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
+                                    "/ingest/report/doi:fake_id/"
+                                    "fake_transfer_id_3?type=xml")
+                        },
+                        "id": "fake_transfer_id_3",
+                        "status": "accepted"
+                    }
+                ]
+            }
+        }
+    )
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id_1?type=html",
+        content=b"oldest ingest report"
+    )
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id_2?type=html",
+        content=b"latest ingest report"
+    )
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id_3?type=html",
+        content=b"old ingest report"
+    )
+
+    report = client.get_latest_ingest_report("doi:fake_id", "html")
+    assert report == b"latest ingest report"
+
+
+def test_no_latest_ingest_report(client, requests_mock):
+    """
+    Test that if there are no ingest reports when trying to get the latest
+    report, None is returned.
+    """
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id",
+        json={
+            "status": "success",
+            "data": {
+                "results": []
+            }
+        }
+    )
+
+    report = client.get_latest_ingest_report("doi:fake_id", "html")
+    assert report is None

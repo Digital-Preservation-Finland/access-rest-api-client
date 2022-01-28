@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
  - Add `AccessClient.contract_id` property
  - Add `DIPRequest.dip_id` property
+ - Add the functionality to fetch ingest reports as three new methods in the `AccessClient` class: `get_ingest_report_entries`, `get_ingest_report` and `get_latest_ingest_report`.
 
 ### Changed
  - `DIPRequest.poll` renamed to `DIPRequest.check_status`

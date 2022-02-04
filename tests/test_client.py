@@ -133,7 +133,9 @@ def test_poll_interval_iter():
 def test_get_ingest_report_entries(client, requests_mock):
     """
     Test that list of ingest report entries are returned for given sip_id
-    in correctly modified form
+    in correctly modified form: download key is removed, date converted
+    to datetime and reports are sorted by date, newest report being the first
+    in the list.
     """
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
@@ -174,14 +176,14 @@ def test_get_ingest_report_entries(client, requests_mock):
     )
     correct_result = [
         {
-            "date": datetime(2022, 1, 1, tzinfo=timezone.utc),
-            "transfer_id": "fake_transfer_id_1",
-            "status": "accepted"
-        },
-        {
             "date": datetime(2022, 1, 2, tzinfo=timezone.utc),
             "transfer_id": "fake_transfer_id_2",
             "status": "rejected"
+        },
+        {
+            "date": datetime(2022, 1, 1, tzinfo=timezone.utc),
+            "transfer_id": "fake_transfer_id_1",
+            "status": "accepted"
         }
     ]
 

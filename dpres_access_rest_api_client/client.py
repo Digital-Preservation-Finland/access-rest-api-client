@@ -231,6 +231,8 @@ class AccessClient:
             entry["date"] = datetime.strptime(entry["date"],
                                               '%Y-%m-%dT%H:%M:%SZ')
             entry["date"] = entry["date"].replace(tzinfo=timezone.utc)
+        entries = sorted(entries, key=lambda entry: entry["date"],
+                         reverse=True)
 
         return entries
 

@@ -250,3 +250,200 @@ def test_delete_dip_query(cli_runner, requests_mock):
     output = result.output
     assert "Proceeding to delete" in output
     assert "DIP could not be deleted" in output
+
+
+def test_list_ingest_reports(cli_runner, requests_mock):
+    """
+    Test listing available ingest reports with 'ingest-report list' command.
+    """
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id",
+        json={
+            "status": "success",
+            "data": {
+                "results": [
+                    {
+                        "date": "2022-01-01T00:00:00Z",
+                        "download": {
+                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
+                                     "/ingest/report/doi:fake_id/"
+                                     "fake_transfer_id_1?type=html"),
+                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
+                                    "/ingest/report/doi:fake_id/"
+                                    "fake_transfer_id_1?type=xml")
+                        },
+                        "id": "fake_transfer_id_1",
+                        "status": "accepted"
+                    },
+                    {
+                        "date": "2022-01-02T00:00:00Z",
+                        "download": {
+                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
+                                     "/ingest/report/doi:fake_id/"
+                                     "fake_transfer_id_2?type=html"),
+                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
+                                    "/ingest/report/doi:fake_id/"
+                                    "fake_transfer_id_2?type=xml")
+                        },
+                        "id": "fake_transfer_id_2",
+                        "status": "rejected"
+                    }
+                ]
+            }
+        }
+    )
+
+    result = cli_runner(["ingest-report", "list", "doi:fake_id"])
+    output = result.output
+
+    assert "2022-01-01 00:00:00+00:00" in output
+    assert "2022-01-02 00:00:00+00:00" in output
+    assert "accepted" in output
+    assert "rejected" in output
+    assert "fake_transfer_id_1" in output
+    assert "fake_transfer_id_2" in output
+
+
+def test_get_ingest_report_with_correct_file_type(cli_runner, requests_mock):
+    """
+    Test getting an ingest report with the correct file type.
+    """
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id?type=html",
+        content=b"html ingest report"
+    )
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id?type=xml",
+        content=b"xml ingest report"
+    )
+
+    html_report = cli_runner(["ingest-report", "get", "doi:fake_id",
+                              "--transfer-id", "fake_transfer_id",
+                              "--file-type", "html"])
+    assert html_report.output == "html ingest report\n"
+
+    xml_report = cli_runner(["ingest-report", "get", "doi:fake_id",
+                             "--transfer-id", "fake_transfer_id",
+                             "--file-type", "xml"])
+    assert xml_report.output == "xml ingest report\n"
+
+
+def test_get_ingest_report_without_specifying_report(cli_runner):
+    """
+    Test that calling 'ingest-report get' without setting --latest or
+    --transfer-id leads to an error.
+    """
+    result = cli_runner(["ingest-report", "get", "sip_id"])
+    assert "report has to be specified with either --latest" in result.output
+    assert result.exit_code != 0
+
+
+def test_get_ingest_report_with_conflicting_report_specification(cli_runner):
+    """
+    Test that calling 'ingest-report get' with both --latest and --transfer-id
+    leads to an error.
+    """
+    result = cli_runner(["ingest-report", "get", "sip_id", "--latest",
+                         "--transfer-id", "transfer_id"])
+    assert "Both --latest and --transfer-id provided" in result.output
+    assert result.exit_code != 0
+
+
+def test_getting_latest_ingest_report(cli_runner, requests_mock):
+    """
+    Test that calling 'ingest-report get' with --latest flag returns
+    the latest ingest report out of many options.
+    """
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id",
+        json={
+            "status": "success",
+            "data": {
+                "results": [
+                    {
+                        "date": "1980-01-01T00:00:00Z",
+                        "download": {
+                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
+                                     "/ingest/report/doi:fake_id/"
+                                     "fake_transfer_id_1?type=html"),
+                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
+                                    "/ingest/report/doi:fake_id/"
+                                    "fake_transfer_id_1?type=xml")
+                        },
+                        "id": "fake_transfer_id_1",
+                        "status": "accepted"
+                    },
+                    {
+                        "date": "2000-01-01T00:00:00Z",
+                        "download": {
+                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
+                                     "/ingest/report/doi:fake_id/"
+                                     "fake_transfer_id_2?type=html"),
+                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
+                                    "/ingest/report/doi:fake_id/"
+                                    "fake_transfer_id_2?type=xml")
+                        },
+                        "id": "fake_transfer_id_2",
+                        "status": "rejected"
+                    },
+                    {
+                        "date": "1990-01-01T00:00:00Z",
+                        "download": {
+                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
+                                     "/ingest/report/doi:fake_id/"
+                                     "fake_transfer_id_3?type=html"),
+                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
+                                    "/ingest/report/doi:fake_id/"
+                                    "fake_transfer_id_3?type=xml")
+                        },
+                        "id": "fake_transfer_id_3",
+                        "status": "accepted"
+                    }
+                ]
+            }
+        }
+    )
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id_1?type=html",
+        content=b"oldest ingest report"
+    )
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id_2?type=html",
+        content=b"latest ingest report"
+    )
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id_3?type=html",
+        content=b"old ingest report"
+    )
+
+    result = cli_runner(["ingest-report", "get", "doi:fake_id", "--latest",
+                         "--file-type", "html"])
+    assert result.output == "latest ingest report\n"
+
+
+def test_save_ingest_report_to_path(cli_runner, requests_mock, testpath):
+    """
+    Test that ingest report is saved to the file system when a path is given.
+    """
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id?type=html",
+        content=b"html ingest report"
+    )
+
+    download_path = testpath / "ingest_report.html"
+    result = cli_runner(["ingest-report", "get", "doi:fake_id",
+                         "--transfer-id", "fake_transfer_id", "--file-type",
+                         "html", "--path", download_path])
+
+    assert result.output == f"Ingest report saved to {download_path}\n"
+
+    assert download_path.is_file()
+    assert download_path.read_bytes() == b"html ingest report"

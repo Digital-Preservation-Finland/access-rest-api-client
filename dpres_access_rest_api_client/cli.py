@@ -263,6 +263,91 @@ def delete(ctx, dip_id):
     click.echo("Done!")
 
 
+@cli.group('ingest-report')
+def ingest_report():
+    """List and get ingest reports of a package"""
+    pass
+
+
+@ingest_report.command(help="List available ingest reports of a package")
+@click.argument("sip_id")
+@click.pass_context
+def list(ctx, sip_id):
+    """List available ingest reports of a package"""
+    client = ctx.obj.client
+
+    entries = client.get_ingest_report_entries(sip_id)
+
+    headers = {
+        "date": "Date",
+        "status": "Status",
+        "transfer_id": "Transfer ID"
+    }
+    output = tabulate.tabulate(entries, headers=headers)
+    click.echo(output)
+
+
+@ingest_report.command(help="Get an ingest report of a package")
+@click.argument("sip_id")
+@click.option(
+    "--transfer-id", type=str,
+    help=(
+        "Specify the ingest report with transfer ID. "
+        "Either --transfer-id or --latest flag has to be set."
+    )
+)
+@click.option(
+    "--latest", is_flag=True,
+    help=(
+        "Get the latest ingest report of a package. "
+        "Either --latest flag or --transfer-id has to be set."
+    )
+)
+@click.option(
+    "--file-type", default="html",
+    type=click.Choice(["html", "xml"]),
+    help="File type of the returned ingest report. Defaults to 'html'."
+)
+@click.option(
+    "--path", type=click.Path(dir_okay=False, writable=True), required=False,
+    help=(
+        "Path where the ingest report will be saved. If not "
+        "specified, echo to stdout by default."
+    )
+)
+@click.pass_context
+def get(ctx, sip_id, path, transfer_id, latest, file_type):
+    """Get an ingest report of a package"""
+    client = ctx.obj.client
+
+    # Validate that the ingest report is specified correctly with either
+    # --latest or --transfer-id
+    if not latest and not transfer_id:
+        raise click.UsageError(
+            "The ingest report has to be specified with either --latest flag "
+            "or providing transfer ID with option --transfer-id."
+        )
+    if latest and transfer_id:
+        raise click.UsageError(
+            "Both --latest and --transfer-id provided. Specify the ingest "
+            "report with only one of the options."
+        )
+
+    # Get ingest report
+    if latest:
+        report = client.get_latest_ingest_report(sip_id, file_type)
+    else:
+        report = client.get_ingest_report(sip_id, transfer_id, file_type)
+
+    # Echo or save to given path
+    if path:
+        with open(path, "wb") as file:
+            file.write(report)
+        click.echo(f"Ingest report saved to {path}")
+    else:
+        click.echo(report)
+
+
 def main():
     """
     Main command-line entry point

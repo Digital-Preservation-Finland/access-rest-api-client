@@ -1,6 +1,6 @@
 """
-CLI tool for searching and downloading DIPs from the DPRES service using the
-REST API.
+CLI tool to retrieve information and perform requests on packages in the DPRES
+service.
 """
 
 import itertools

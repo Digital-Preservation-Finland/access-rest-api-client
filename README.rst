@@ -2,8 +2,8 @@ Access REST API Client
 ======================
 
 Access REST API Client is a command-line utility and Python library for
-searching and downloading packages in the Finnish National Digital Preservation
-Service.
+retrieving information and performing requests on packages in the Finnish
+National Digital Preservation Service.
 
 Installation
 ------------

@@ -11,8 +11,9 @@ def test_help(cli_runner):
     result = cli_runner(["--help"])
 
     # Commands are listed in the help output
-    assert "Download a preserved package" in result.output
-    assert "List and search for" in result.output
+    commands = ["dip", "ingest-report", "search", "write-config"]
+    for command in commands:
+        assert command in result.output
 
 
 def test_write_config(cli_runner, home_config_path):
@@ -197,7 +198,7 @@ def test_download(cli_runner, requests_mock, testpath):
     download_path = download_dir / "spam.zip"
 
     result = cli_runner([
-        "download", "--path", str(download_path), "spam"
+        "dip", "download", "--path", str(download_path), "spam"
     ])
     output = result.output
 
@@ -241,12 +242,12 @@ def test_delete_dip_query(cli_runner, requests_mock):
     )
 
     # Successful deletion
-    result = cli_runner(["delete", "spam_dip"])
+    result = cli_runner(["dip", "delete", "spam_dip"])
     output = result.output
     assert "Proceeding to delete" in output
 
     # Unsuccessful deletion
-    result = cli_runner(["delete", "not_found_dip"])
+    result = cli_runner(["dip", "delete", "not_found_dip"])
     output = result.output
     assert "Proceeding to delete" in output
     assert "DIP could not be deleted" in output

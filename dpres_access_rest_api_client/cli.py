@@ -49,7 +49,13 @@ def write_config():
         click.echo("Configuration file already exists")
 
 
-@cli.command(help="Download a preserved package from the DPRES service")
+@cli.group()
+def dip():
+    """Download and delete DIPs created from a package"""
+    pass
+
+
+@dip.command(help="Download a preserved package from the DPRES service")
 @click.option(
     "--path",
     type=click.Path(file_okay=True, dir_okay=False, writable=True),
@@ -173,6 +179,28 @@ def _download_save_to_path(dip_request, path):
                 progressbar.update(1024 * 1024)
 
 
+@dip.command(
+    help="Delete a completed DIP from the DPRES service"
+)
+@click.argument("dip_id")
+@click.pass_context
+def delete(ctx, dip_id):
+    """
+    Delete a completed DIP from the DPRES service.
+    """
+    client = ctx.obj.client
+
+    click.echo("")
+    click.echo("Proceeding to delete DIP from the service...")
+
+    dip_deleted = client.delete_dissemination(dip_id=dip_id)
+
+    if not dip_deleted:
+        click.echo("DIP could not be deleted from the service.")
+
+    click.echo("Done!")
+
+
 @cli.command(
     help="List and search for preserved packages in the DPRES service"
 )
@@ -239,28 +267,6 @@ def search(ctx, page, limit, query, pager):
         tabulated
     ])
     echo_func(output)
-
-
-@cli.command(
-    help="Delete a completed DIP from the DPRES service"
-)
-@click.argument("dip_id")
-@click.pass_context
-def delete(ctx, dip_id):
-    """
-    Delete a completed DIP from the DPRES service.
-    """
-    client = ctx.obj.client
-
-    click.echo("")
-    click.echo("Proceeding to delete DIP from the service...")
-
-    dip_deleted = client.delete_dissemination(dip_id=dip_id)
-
-    if not dip_deleted:
-        click.echo("DIP could not be deleted from the service.")
-
-    click.echo("Done!")
 
 
 @cli.group('ingest-report')

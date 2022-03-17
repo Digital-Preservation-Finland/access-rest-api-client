@@ -284,6 +284,10 @@ def list(ctx, sip_id):
 
     entries = client.get_ingest_report_entries(sip_id)
 
+    if not entries:
+        click.echo(f"No ingest reports found for SIP id '{sip_id}'")
+        return
+
     headers = {
         "date": "Date",
         "status": "Status",

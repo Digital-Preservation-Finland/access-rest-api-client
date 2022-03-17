@@ -321,6 +321,21 @@ def test_no_latest_ingest_report(client, requests_mock):
     assert report is None
 
 
+def test_no_ingest_reports(client, requests_mock):
+    """
+    Test that if there are no ingest reports for a SIP, empty list is returned.
+    """
+    # When there are no available ingest reports, access-rest-api returns 404
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id",
+        status_code=404
+    )
+
+    received_entries = client.get_ingest_report_entries("doi:fake_id")
+    assert received_entries == []
+
+
 def test_ssl_verification(mock_config):
     """Test that SSL verification is enabled by default."""
     # Remove 'verify_ssl' parameter from configuration file

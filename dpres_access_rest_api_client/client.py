@@ -217,12 +217,21 @@ class AccessClient:
 
         :param sip_id: SIP identifier of the package
 
-        :returns: Entries of all ingest reports created for a package
-                  as a list of dicts.
+        :returns: Entries of all ingest reports created for a package as a list
+                  of dicts. Returns an empty list if there are no ingest
+                  reports available, or if the given SIP id cannot be found.
         """
         sip_id = quote(sip_id, safe="")
         url = f"{self.base_url}/ingest/report/{sip_id}"
-        response = self.session.get(url)
+        try:
+            response = self.session.get(url)
+        except requests.exceptions.HTTPError as error:
+            if error.response.status_code == 404:
+                # Either there are no ingest reports for the SIP or the SIP
+                # doesn't even exist. Either case, return an empty list.
+                return []
+            raise
+
         entries = response.json()["data"]["results"]
 
         # Modify entries to be more user-friendly

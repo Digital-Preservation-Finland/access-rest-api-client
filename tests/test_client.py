@@ -309,15 +309,25 @@ def test_no_latest_ingest_report(client, requests_mock):
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
         "doi%3Afake_id",
-        json={
-            "status": "success",
-            "data": {
-                "results": []
-            }
-        }
+        status_code=404
     )
 
     report = client.get_latest_ingest_report("doi:fake_id", "html")
+    assert report is None
+
+
+def test_no_ingest_report(client, requests_mock):
+    """
+    Test that if there is no ingest report with given ids, None is returned.
+    """
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id?type=html",
+        status_code=404
+    )
+
+    report = client.get_ingest_report("doi:fake_id", "fake_transfer_id",
+                                      "html")
     assert report is None
 
 

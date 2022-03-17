@@ -323,6 +323,25 @@ def test_no_ingest_reports(cli_runner, requests_mock):
     assert output == "No ingest reports found for SIP id 'doi:fake_id'\n"
 
 
+def test_no_ingest_report(cli_runner, requests_mock):
+    """
+    Test that CLI gives a sensible message when a spesified ingest report is
+    not available.
+    """
+    requests_mock.get(
+        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
+        "doi%3Afake_id/fake_transfer_id?type=html",
+        status_code=404
+    )
+
+    result = cli_runner(["ingest-report", "get", "doi:fake_id",
+                         "--transfer-id", "fake_transfer_id", "--file-type",
+                         "html"])
+
+    assert result.output == ("No ingest report was found with given "
+                             "parameters\n")
+
+
 def test_get_ingest_report_with_correct_file_type(cli_runner, requests_mock):
     """
     Test getting an ingest report with the correct file type.

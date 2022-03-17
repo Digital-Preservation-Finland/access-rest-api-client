@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Changed
 - Changed `get_ingest_report_entries` to return an empty list instead of raising 404 HTTP error when no ingest reports are found.
+- Changed `get_ingest_report` to return None of raising 404 HTTP error when no ingest report is found.
 
 ## [0.3] - 2022-02-21
 ### Added

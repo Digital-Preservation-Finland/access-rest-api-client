@@ -254,7 +254,9 @@ class AccessClient:
         :param transfer_id: Transfer id
         :param file_type: File format to be returned, either "xml" or "html"
 
-        :returns: The ingest report as a byte string
+        :returns: The ingest report as a byte string. Returns None if no
+                  ingest report is found for the given SIP and transfer
+                  identifiers or if the identifiers are faulty.
         """
         if file_type not in ["xml", "html"]:
             raise ValueError(f"Invalid file type '{file_type}': Only 'xml' "
@@ -264,7 +266,15 @@ class AccessClient:
         transfer_id = quote(transfer_id, safe="")
         url = (f"{self.base_url}/ingest/report/{sip_id}/{transfer_id}"
                f"?type={file_type}")
-        response = self.session.get(url)
+        try:
+            response = self.session.get(url)
+        except requests.exceptions.HTTPError as error:
+            if error.response.status_code == 404:
+                # Either there is no ingest report for the SIP and transfer id
+                # or the ids are faulty. Either case, return None.
+                return None
+            raise
+
         return response.content
 
     def get_latest_ingest_report(self, sip_id, file_type):

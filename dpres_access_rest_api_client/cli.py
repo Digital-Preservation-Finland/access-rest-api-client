@@ -349,6 +349,10 @@ def get(ctx, sip_id, path, transfer_id, latest, file_type):
     else:
         report = client.get_ingest_report(sip_id, transfer_id, file_type)
 
+    if report is None:
+        click.echo("No ingest report was found with given parameters")
+        return
+
     # Echo or save to given path
     if path:
         with open(path, "wb") as file:

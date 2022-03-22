@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from dpres_access_rest_api_client.client import get_poll_interval_iter
+import dpres_access_rest_api_client.client
 
 
 def test_dip_request(testpath, client, requests_mock):
@@ -115,7 +115,8 @@ def test_poll_interval_iter():
     Test that poll interval iterator returns poll intervals in the expected
     range
     """
-    poll_interval_iter = get_poll_interval_iter()
+    poll_interval_iter \
+        = dpres_access_rest_api_client.client.get_poll_interval_iter()
 
     for _ in range(0, 5):
         # First five are 3 seconds with 0.5s of jitter
@@ -318,3 +319,12 @@ def test_no_latest_ingest_report(client, requests_mock):
 
     report = client.get_latest_ingest_report("doi:fake_id", "html")
     assert report is None
+
+
+def test_ssl_verification(mock_config):
+    """Test that SSL verification is enabled by default."""
+    # Remove 'verify_ssl' parameter from configuration file
+    mock_config.remove_option('dpres', 'verify_ssl')
+
+    client = dpres_access_rest_api_client.client.AccessClient()
+    assert client.session.verify

@@ -37,6 +37,7 @@ def mock_config(monkeypatch, home_config_path):
         "contract_id=urn:uuid:fake_contract_id\n"
         "username=fakeuser\n"
         "password=fakepassword\n"
+        "verify_ssl=true\n"
         "api_host=http://fakeapi/"
     )
 

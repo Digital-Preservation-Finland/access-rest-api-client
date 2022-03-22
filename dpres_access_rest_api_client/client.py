@@ -92,7 +92,8 @@ class AccessClient:
         )
 
         # Disable SSL verification depending on user config
-        session.verify = config['dpres'].getboolean('verify_ssl')
+        session.verify \
+            = config['dpres'].getboolean('verify_ssl', fallback=True)
 
         if not session.verify:
             warnings.warn(

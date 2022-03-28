@@ -121,7 +121,7 @@ class AccessClient:
         session.headers["User-Agent"] = (
             f"dpres-access-rest-api-client/{__version__} "
             f"(github.com/Digital-Preservation-Finland/"
-            f"dpres-access-rest-api-client)"
+            f"access-rest-api-client)"
         )
 
         retry = Retry(

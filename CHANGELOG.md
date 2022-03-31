@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [0.4] - 2022-03-31
 ### Changed
 - Changed `get_ingest_report_entries` to return an empty list instead of raising 404 HTTP error when no ingest reports are found.
 - Changed `get_ingest_report` to return None of raising 404 HTTP error when no ingest report is found.
@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
  - First release of dpres-access-rest-api-client
 
+[0.4]: https://github.com/Digital-Preservation-Finland/access-rest-api-client/compare/v0.3...v0.4
 [0.3]: https://github.com/Digital-Preservation-Finland/access-rest-api-client/compare/v0.2...v0.3
 [0.2]: https://github.com/Digital-Preservation-Finland/access-rest-api-client/compare/v0.1...v0.2
-[Unreleased]: https://github.com/Digital-Preservation-Finland/access-rest-api-client/compare/v0.3...HEAD
+[Unreleased]: https://github.com/Digital-Preservation-Finland/access-rest-api-client/compare/v0.4...HEAD

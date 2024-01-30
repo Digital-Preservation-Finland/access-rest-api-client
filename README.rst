@@ -5,28 +5,23 @@ Access REST API Client is a command-line utility and Python library for
 retrieving information and performing requests on packages in the Finnish
 National Digital Preservation Service.
 
-Installation
+Requirements
 ------------
 
-Installation requires Python 3.6 or newer. The software has been tested using
-CentOS 7.
+Installation and usage requires Python 3.9 or newer.
+The software is tested with Python 3.9 on AlmaLinux 9 release.
 
-You can install the application inside a virtualenv using the following
-instructions.
+Installation using RPM packages (preferred)
+-------------------------------------------
 
-To create a virtualenv, activate it and install dpres-access-rest-api-client, run
+Installation on Linux distributions is done by using the RPM Package Manager.
+See how to `configure the PAS-jakelu RPM repositories`_ to setup necessary software sources.
 
-::
+.. _configure the PAS-jakelu RPM repositories: https://www.digitalpreservation.fi/user_guide/installation_of_tools 
 
-    # Create virtualenv
-    $ python3 -mvenv venv
-    # Activate virtualenv
-    $ source venv/bin/activate
-    # Install dpres-access-rest-api-client
-    $ pip install .
+After the repository has been added, the package can be installed by running the following command::
 
-To deactivate the virtualenv, run ``deactivate``. The created virtualenv needs
-to be active in order to use dpres-access-rest-api-client.
+    sudo dnf install python3-dpres-access-rest-api-client
 
 Usage
 -----
@@ -62,6 +57,28 @@ run
 
 See ``access-client download --help`` for the usage of extra parameters.
 
+Installation using Python Virtualenv for development purposes
+-------------------------------------------------------------
+
+You can install the application inside a virtualenv using the following
+instructions.
+
+Create a virtual environment::
+    
+    python3 -m venv venv
+
+Run the following to activate the virtual environment::
+
+    source venv/bin/activate
+
+Install the required software with commands::
+
+    pip install --upgrade pip==20.2.4 setuptools
+    pip install -r requirements_github.txt
+    pip install .
+
+To deactivate the virtual environment, run ``deactivate``.
+To reactivate it, run the ``source`` command above.
 
 Copyright
 ---------

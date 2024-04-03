@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6] - 2024-04-03
+### Added
+ - Installation instructions for AlmaLinux 9 using RPM packages
+
 ## [0.5] - 2023-07-20
 ### Added
  - Add RHEL9 RPM spec file.
@@ -32,8 +36,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
  - First release of dpres-access-rest-api-client
 
+[0.6]: https://github.com/Digital-Preservation-Finland/access-rest-api-client/compare/v0.5...v0.6
 [0.5]: https://github.com/Digital-Preservation-Finland/access-rest-api-client/compare/v0.4...v0.5
 [0.4]: https://github.com/Digital-Preservation-Finland/access-rest-api-client/compare/v0.3...v0.4
 [0.3]: https://github.com/Digital-Preservation-Finland/access-rest-api-client/compare/v0.2...v0.3
 [0.2]: https://github.com/Digital-Preservation-Finland/access-rest-api-client/compare/v0.1...v0.2
-[Unreleased]: https://github.com/Digital-Preservation-Finland/access-rest-api-client/compare/v0.5...HEAD
+[Unreleased]: https://github.com/Digital-Preservation-Finland/access-rest-api-client/compare/v0.6...HEAD

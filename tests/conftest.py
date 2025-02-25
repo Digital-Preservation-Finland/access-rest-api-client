@@ -105,7 +105,7 @@ def transfer_id():
     return str(uuid4())
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def uploadable_file_path_obj(tmp_path):
     """Generate a temporary file that could be used to test uploading.
     """
@@ -140,9 +140,9 @@ def mock_tus_endpoints(transfer_id):
         context.headers = {
             "Cache-Control": "no-store",
             "Tus-Resumable": tus_version,
-            "Upload-Offset": chunks_uploaded,
+            "Upload-Offset": str(chunks_uploaded),
             "Upload-Metadata": upload_metadata,
-            "Upload-Length": upload_length,
+            "Upload-Length": str(upload_length),
         }
         return ""
 
@@ -159,7 +159,7 @@ def mock_tus_endpoints(transfer_id):
             chunks_uploaded = upload_length
         context.headers = {
             "Tus-Resumable": tus_version,
-            "Upload-Offset": chunks_uploaded,
+            "Upload-Offset": str(chunks_uploaded),
         }
         return ""
 
@@ -169,7 +169,7 @@ def mock_tus_endpoints(transfer_id):
         nonlocal upload_length
         transfer_exists = True
         upload_metadata = request.headers["Upload-Metadata"]
-        upload_length = request.headers["Upload-Length"]
+        upload_length = int(request.headers["Upload-Length"])
 
         context.headers = {
             "Location": f"{tus_url}/{transfer_id}",

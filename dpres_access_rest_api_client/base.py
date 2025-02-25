@@ -24,14 +24,15 @@ class BaseClient:
         if not config:
             config = CONFIG
 
+        self._api_version = api
+        self._contract_id = config['dpres']['contract_id']
         # Normalize host by removing the trailing slash. Host is
         # read-only attribute, since changing the host while polling a
         # DIP would cause problems.
         self._host = config["dpres"]["api_host"].rstrip("/")
-        self._api_version = api
         self.base_url = (
             f"{self.host}/api/{self.api_version}/"
-            f"{config['dpres']['contract_id']}"
+            f"{self.contract_id}"
         )
 
         self.session = self._create_session(config=config)
@@ -40,6 +41,11 @@ class BaseClient:
     def api_version(self):
         """Return the API version."""
         return self._api_version
+
+    @property
+    def contract_id(self):
+        """Return the contract id."""
+        return self._contract_id
 
     @property
     def host(self):

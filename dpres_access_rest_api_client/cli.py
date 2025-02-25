@@ -19,7 +19,8 @@ from .config import write_default_config
 # pylint: disable=too-few-public-methods
 class Context:
     """Context class for the Click application"""
-    client = None
+    client_v2 = None
+    client_v3 = None
 
 
 @click.group()
@@ -28,7 +29,7 @@ def cli(ctx):
     """
     DPRES Access REST API client
     """
-    ctx.obj.client = AccessClient()
+    ctx.obj.client_v2 = AccessClient()
 
 
 @cli.command(
@@ -94,7 +95,7 @@ def download(ctx, path, archive_format, catalog, delete, aip_id):
     """
     Download a file and save it to the given path
     """
-    client = ctx.obj.client
+    client = ctx.obj.client_v2
     if not path:
         path = (Path(".").resolve() / aip_id).with_suffix(f".{archive_format}")
     else:
@@ -188,7 +189,7 @@ def delete(ctx, dip_id):
     """
     Delete a completed DIP from the DPRES service.
     """
-    client = ctx.obj.client
+    client = ctx.obj.client_v2
 
     click.echo("")
     click.echo("Proceeding to delete DIP from the service...")
@@ -236,7 +237,7 @@ def search(ctx, page, limit, query, pager):
     """
     List and search for packages in the DPRES service
     """
-    client = ctx.obj.client
+    client = ctx.obj.client_v2
     echo_func = click.echo_via_pager if pager else click.echo
 
     search_results = client.search(page=page, limit=limit, query=query)
@@ -280,7 +281,7 @@ def ingest_report():
 @click.pass_context
 def list(ctx, sip_id):
     """List available ingest reports of a package"""
-    client = ctx.obj.client
+    client = ctx.obj.client_v2
 
     entries = client.get_ingest_report_entries(sip_id)
 
@@ -328,7 +329,7 @@ def list(ctx, sip_id):
 @click.pass_context
 def get(ctx, sip_id, path, transfer_id, latest, file_type):
     """Get an ingest report of a package"""
-    client = ctx.obj.client
+    client = ctx.obj.client_v2
 
     # Validate that the ingest report is specified correctly with either
     # --latest or --transfer-id

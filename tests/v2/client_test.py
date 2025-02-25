@@ -10,7 +10,7 @@ import pytest
 import dpres_access_rest_api_client.v2.client
 
 
-def test_dip_request(testpath, client, requests_mock):
+def test_dip_request(testpath, client_v2, requests_mock):
     """
     Test downloading a DIP using the AccessClient methods
     """
@@ -47,7 +47,7 @@ def test_dip_request(testpath, client, requests_mock):
         },
     )
 
-    dip_request = client.create_dip_request("spam", archive_format="zip")
+    dip_request = client_v2.create_dip_request("spam", archive_format="zip")
 
     # Perform the first poll request; DIP is not yet ready
     assert not dip_request.check_status()
@@ -104,10 +104,10 @@ def test_dip_request(testpath, client, requests_mock):
     assert delete_request is True
 
 
-def test_host_change(client):
+def test_host_change(client_v2):
     """Test that host can not be changed."""
     with pytest.raises(Exception):
-        client.host = "new_host"
+        client_v2.host = "new_host"
 
 
 def test_poll_interval_iter():
@@ -132,7 +132,7 @@ def test_poll_interval_iter():
         assert math.isclose(next(poll_interval_iter), 60, abs_tol=0.5)
 
 
-def test_get_ingest_report_entries(client, requests_mock):
+def test_get_ingest_report_entries(client_v2, requests_mock):
     """
     Test that list of ingest report entries are returned for given sip_id
     in correctly modified form: download key is removed, date converted
@@ -197,11 +197,11 @@ def test_get_ingest_report_entries(client, requests_mock):
         },
     ]
 
-    received_entries = client.get_ingest_report_entries("doi:fake_id")
+    received_entries = client_v2.get_ingest_report_entries("doi:fake_id")
     assert received_entries == correct_result
 
 
-def test_get_ingest_report(client, requests_mock):
+def test_get_ingest_report(client_v2, requests_mock):
     """
     Test that ingest report is returned for given id with correct file type
     """
@@ -216,10 +216,10 @@ def test_get_ingest_report(client, requests_mock):
         content=b"xml ingest report",
     )
 
-    html_report = client.get_ingest_report(
+    html_report = client_v2.get_ingest_report(
         "doi:fake_id", "fake_transfer_id", "html"
     )
-    xml_report = client.get_ingest_report(
+    xml_report = client_v2.get_ingest_report(
         "doi:fake_id", "fake_transfer_id", "xml"
     )
 
@@ -227,17 +227,17 @@ def test_get_ingest_report(client, requests_mock):
     assert xml_report == b"xml ingest report"
 
 
-def test_invalid_ingest_report_file_type(client):
+def test_invalid_ingest_report_file_type(client_v2):
     """
     Test that trying to get ingest report with an invalid file type raises
     ValueError
     """
     with pytest.raises(ValueError) as error:
-        client.get_ingest_report("sip_id", "transfer_id", "invalid_file_type")
+        client_v2.get_ingest_report("sip_id", "transfer_id", "invalid_file_type")
     assert "Invalid file type 'invalid_file_type'" in str(error.value)
 
 
-def test_get_latest_ingest_report(client, requests_mock):
+def test_get_latest_ingest_report(client_v2, requests_mock):
     """
     Test that the latest ingest report is returned when there exists many
     ingest reports for a package.
@@ -320,11 +320,11 @@ def test_get_latest_ingest_report(client, requests_mock):
         content=b"old ingest report",
     )
 
-    report = client.get_latest_ingest_report("doi:fake_id", "html")
+    report = client_v2.get_latest_ingest_report("doi:fake_id", "html")
     assert report == b"latest ingest report"
 
 
-def test_no_latest_ingest_report(client, requests_mock):
+def test_no_latest_ingest_report(client_v2, requests_mock):
     """
     Test that if there are no ingest reports when trying to get the latest
     report, None is returned.
@@ -335,11 +335,11 @@ def test_no_latest_ingest_report(client, requests_mock):
         status_code=404,
     )
 
-    report = client.get_latest_ingest_report("doi:fake_id", "html")
+    report = client_v2.get_latest_ingest_report("doi:fake_id", "html")
     assert report is None
 
 
-def test_no_ingest_report(client, requests_mock):
+def test_no_ingest_report(client_v2, requests_mock):
     """
     Test that if there is no ingest report with given ids, None is returned.
     """
@@ -349,13 +349,13 @@ def test_no_ingest_report(client, requests_mock):
         status_code=404,
     )
 
-    report = client.get_ingest_report(
+    report = client_v2.get_ingest_report(
         "doi:fake_id", "fake_transfer_id", "html"
     )
     assert report is None
 
 
-def test_no_ingest_reports(client, requests_mock):
+def test_no_ingest_reports(client_v2, requests_mock):
     """
     Test that if there are no ingest reports for a SIP, empty list is returned.
     """
@@ -366,7 +366,7 @@ def test_no_ingest_reports(client, requests_mock):
         status_code=404,
     )
 
-    received_entries = client.get_ingest_report_entries("doi:fake_id")
+    received_entries = client_v2.get_ingest_report_entries("doi:fake_id")
     assert received_entries == []
 
 

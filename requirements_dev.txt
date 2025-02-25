@@ -2,6 +2,7 @@ requests
 click
 humanize
 tabulate
+tuspy
 
 # Testing requirements
 pytest

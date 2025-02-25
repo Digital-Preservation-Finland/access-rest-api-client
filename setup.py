@@ -12,7 +12,8 @@ setup(
         "click",
         "requests",
         "humanize",
-        "tabulate"
+        "tabulate",
+        "tuspy"
     ],
     entry_points={
         "console_scripts": [

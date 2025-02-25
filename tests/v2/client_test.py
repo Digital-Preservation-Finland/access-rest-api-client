@@ -1,12 +1,13 @@
 """
-dpres_access_rest_api_client.client tests
+dpres_access_rest_api_client.v2.client tests
 """
+
 import math
 from datetime import datetime, timezone
 
 import pytest
 
-import dpres_access_rest_api_client.client
+import dpres_access_rest_api_client.v2.client
 
 
 def test_dip_request(testpath, client, requests_mock):
@@ -24,19 +25,16 @@ def test_dip_request(testpath, client, requests_mock):
                     "/api/2.0/urn:uuid:fake_contract_id/disseminated/"
                     "spam_dip"
                 )
-            }
-        }
+            },
+        },
     )
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
         "spam_dip",
         json={
             "status": "success",
-            "data": {
-                "complete": "false",
-                "actions": {}
-            }
-        }
+            "data": {"complete": "false", "actions": {}},
+        },
     )
     requests_mock.delete(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
@@ -45,8 +43,8 @@ def test_dip_request(testpath, client, requests_mock):
             "status": "success",
             "data": {
                 "deleted": "true",
-            }
-        }
+            },
+        },
     )
 
     dip_request = client.create_dip_request("spam", archive_format="zip")
@@ -76,9 +74,9 @@ def test_dip_request(testpath, client, requests_mock):
                         "/api/2.0/urn:uuid:fake_contract_id/disseminated/"
                         "spam_dip/download"
                     )
-                }
-            }
-        }
+                },
+            },
+        },
     )
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
@@ -88,7 +86,7 @@ def test_dip_request(testpath, client, requests_mock):
             # requests-mock does not generate a Content-Length header
             # automatically
             "Content-Length": "46"
-        }
+        },
     )
 
     # Second poll reuest; DIP is now ready
@@ -96,8 +94,10 @@ def test_dip_request(testpath, client, requests_mock):
     dip_request.download(download_path)
 
     assert download_path.is_file()
-    assert download_path.read_bytes() == \
-        b"This is a complete DIP in a ZIP sent in a blip"
+    assert (
+        download_path.read_bytes()
+        == b"This is a complete DIP in a ZIP sent in a blip"
+    )
 
     # DIP deletion should now return True
     delete_request = dip_request.delete()
@@ -115,8 +115,9 @@ def test_poll_interval_iter():
     Test that poll interval iterator returns poll intervals in the expected
     range
     """
-    poll_interval_iter \
-        = dpres_access_rest_api_client.client.get_poll_interval_iter()
+    poll_interval_iter = (
+        dpres_access_rest_api_client.v2.client.get_poll_interval_iter()
+    )
 
     for _ in range(0, 5):
         # First five are 3 seconds with 0.5s of jitter
@@ -148,44 +149,52 @@ def test_get_ingest_report_entries(client, requests_mock):
                     {
                         "date": "2022-01-01T00:00:00Z",
                         "download": {
-                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
-                                     "/ingest/report/doi:fake_id/"
-                                     "fake_transfer_id_1?type=html"),
-                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
-                                    "/ingest/report/doi:fake_id/"
-                                    "fake_transfer_id_1?type=xml")
+                            "html": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_1?type=html"
+                            ),
+                            "xml": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_1?type=xml"
+                            ),
                         },
                         "id": "fake_transfer_id_1",
-                        "status": "accepted"
+                        "status": "accepted",
                     },
                     {
                         "date": "2022-01-02T00:00:00Z",
                         "download": {
-                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
-                                     "/ingest/report/doi:fake_id/"
-                                     "fake_transfer_id_2?type=html"),
-                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
-                                    "/ingest/report/doi:fake_id/"
-                                    "fake_transfer_id_2?type=xml")
+                            "html": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_2?type=html"
+                            ),
+                            "xml": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_2?type=xml"
+                            ),
                         },
                         "id": "fake_transfer_id_2",
-                        "status": "rejected"
-                    }
+                        "status": "rejected",
+                    },
                 ]
-            }
-        }
+            },
+        },
     )
     correct_result = [
         {
             "date": datetime(2022, 1, 2, tzinfo=timezone.utc),
             "transfer_id": "fake_transfer_id_2",
-            "status": "rejected"
+            "status": "rejected",
         },
         {
             "date": datetime(2022, 1, 1, tzinfo=timezone.utc),
             "transfer_id": "fake_transfer_id_1",
-            "status": "accepted"
-        }
+            "status": "accepted",
+        },
     ]
 
     received_entries = client.get_ingest_report_entries("doi:fake_id")
@@ -199,18 +208,20 @@ def test_get_ingest_report(client, requests_mock):
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
         "doi%3Afake_id/fake_transfer_id?type=html",
-        content=b"html ingest report"
+        content=b"html ingest report",
     )
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
         "doi%3Afake_id/fake_transfer_id?type=xml",
-        content=b"xml ingest report"
+        content=b"xml ingest report",
     )
 
-    html_report = client.get_ingest_report("doi:fake_id", "fake_transfer_id",
-                                           "html")
-    xml_report = client.get_ingest_report("doi:fake_id", "fake_transfer_id",
-                                          "xml")
+    html_report = client.get_ingest_report(
+        "doi:fake_id", "fake_transfer_id", "html"
+    )
+    xml_report = client.get_ingest_report(
+        "doi:fake_id", "fake_transfer_id", "xml"
+    )
 
     assert html_report == b"html ingest report"
     assert xml_report == b"xml ingest report"
@@ -241,60 +252,72 @@ def test_get_latest_ingest_report(client, requests_mock):
                     {
                         "date": "1980-01-01T00:00:00Z",
                         "download": {
-                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
-                                     "/ingest/report/doi:fake_id/"
-                                     "fake_transfer_id_1?type=html"),
-                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
-                                    "/ingest/report/doi:fake_id/"
-                                    "fake_transfer_id_1?type=xml")
+                            "html": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_1?type=html"
+                            ),
+                            "xml": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_1?type=xml"
+                            ),
                         },
                         "id": "fake_transfer_id_1",
-                        "status": "accepted"
+                        "status": "accepted",
                     },
                     {
                         "date": "2000-01-01T00:00:00Z",
                         "download": {
-                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
-                                     "/ingest/report/doi:fake_id/"
-                                     "fake_transfer_id_2?type=html"),
-                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
-                                    "/ingest/report/doi:fake_id/"
-                                    "fake_transfer_id_2?type=xml")
+                            "html": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_2?type=html"
+                            ),
+                            "xml": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_2?type=xml"
+                            ),
                         },
                         "id": "fake_transfer_id_2",
-                        "status": "rejected"
+                        "status": "rejected",
                     },
                     {
                         "date": "1990-01-01T00:00:00Z",
                         "download": {
-                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
-                                     "/ingest/report/doi:fake_id/"
-                                     "fake_transfer_id_3?type=html"),
-                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
-                                    "/ingest/report/doi:fake_id/"
-                                    "fake_transfer_id_3?type=xml")
+                            "html": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_3?type=html"
+                            ),
+                            "xml": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_3?type=xml"
+                            ),
                         },
                         "id": "fake_transfer_id_3",
-                        "status": "accepted"
-                    }
+                        "status": "accepted",
+                    },
                 ]
-            }
-        }
+            },
+        },
     )
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
         "doi%3Afake_id/fake_transfer_id_1?type=html",
-        content=b"oldest ingest report"
+        content=b"oldest ingest report",
     )
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
         "doi%3Afake_id/fake_transfer_id_2?type=html",
-        content=b"latest ingest report"
+        content=b"latest ingest report",
     )
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
         "doi%3Afake_id/fake_transfer_id_3?type=html",
-        content=b"old ingest report"
+        content=b"old ingest report",
     )
 
     report = client.get_latest_ingest_report("doi:fake_id", "html")
@@ -309,7 +332,7 @@ def test_no_latest_ingest_report(client, requests_mock):
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
         "doi%3Afake_id",
-        status_code=404
+        status_code=404,
     )
 
     report = client.get_latest_ingest_report("doi:fake_id", "html")
@@ -323,11 +346,12 @@ def test_no_ingest_report(client, requests_mock):
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
         "doi%3Afake_id/fake_transfer_id?type=html",
-        status_code=404
+        status_code=404,
     )
 
-    report = client.get_ingest_report("doi:fake_id", "fake_transfer_id",
-                                      "html")
+    report = client.get_ingest_report(
+        "doi:fake_id", "fake_transfer_id", "html"
+    )
     assert report is None
 
 
@@ -339,7 +363,7 @@ def test_no_ingest_reports(client, requests_mock):
     requests_mock.get(
         "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
         "doi%3Afake_id",
-        status_code=404
+        status_code=404,
     )
 
     received_entries = client.get_ingest_report_entries("doi:fake_id")
@@ -349,7 +373,7 @@ def test_no_ingest_reports(client, requests_mock):
 def test_ssl_verification(mock_config):
     """Test that SSL verification is enabled by default."""
     # Remove 'verify_ssl' parameter from configuration file
-    mock_config.remove_option('dpres', 'verify_ssl')
+    mock_config.remove_option("dpres", "verify_ssl")
 
-    client = dpres_access_rest_api_client.client.AccessClient()
+    client = dpres_access_rest_api_client.v2.client.AccessClient()
     assert client.session.verify

@@ -9,21 +9,14 @@ import functools
 import random
 import time
 from urllib.parse import quote
-import warnings
 from pathlib import Path
 
-import urllib3
-from urllib3.exceptions import InsecureRequestWarning
-
 import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
 
-from .config import CONFIG
+from ..base import BaseClient
 
 SearchResult = collections.namedtuple(
-    "SearchResult",
-    ("results", "prev_url", "next_url")
+    "SearchResult", ("results", "prev_url", "next_url")
 )
 
 
@@ -50,95 +43,16 @@ def get_poll_interval_iter():
         yield last_interval + (random.random() * 0.5)  # nosec
 
 
-class AccessClient:
+class AccessClient(BaseClient):
     """
     Client for accessing the Digital Preservation Service REST API
     """
+
     def __init__(self, config=None):
         """
         Create the AccessClient instance
         """
-        if not config:
-            config = CONFIG
-
-        # Normalize host by removing the trailing slash. Host is
-        # read-only attribute, since changing the host while polling a
-        # DIP would cause problems.
-        self._host = config["dpres"]["api_host"].rstrip("/")
-        self.base_url = \
-            f"{self.host}/api/2.0/{config['dpres']['contract_id']}"
-
-        self.session = self._create_session(config=config)
-
-    @property
-    def host(self):
-        """Return API host."""
-        return self._host
-
-    @classmethod
-    def _create_session(cls, config=None):
-        """
-        Create self.session based on the provided configuration
-        """
-        from dpres_access_rest_api_client import __version__
-
-        if not config:
-            config = CONFIG
-
-        session = requests.Session()
-
-        session.auth = (
-            config["dpres"]["username"], config["dpres"]["password"]
-        )
-
-        # Disable SSL verification depending on user config
-        session.verify \
-            = config['dpres'].getboolean('verify_ssl', fallback=True)
-
-        if not session.verify:
-            warnings.warn(
-                "SSL verification has been *DISABLED* for access-rest-api-"
-                "client.",
-                InsecureRequestWarning
-            )
-            # Disable warnings or otherwise every single request
-            # will end up printing a lot of noise
-            urllib3.disable_warnings(category=InsecureRequestWarning)
-
-        # Automatically run 'raise_for_status' for each response
-        def check_status(resp, **_):
-            """Check status for each response"""
-            resp.raise_for_status()
-
-        session.hooks["response"] = [check_status]
-
-        # Set a timeout of 10 seconds for every request by shimming the
-        # 'request' method
-        session.request = functools.partial(
-            session.request, timeout=10
-        )
-
-        session.headers["User-Agent"] = (
-            f"dpres-access-rest-api-client/{__version__} "
-            f"(github.com/Digital-Preservation-Finland/"
-            f"access-rest-api-client)"
-        )
-
-        retry = Retry(
-            # Retry a total of 5 times
-            total=5,
-            # Backoff factor of 1, meaning each retry will have a doubled delay
-            backoff_factor=1,
-            # Server-side errors will result in retries
-            status_forcelist=[500, 502, 503, 504]
-        )
-
-        # Setup retry policy only for API calls
-        session.mount(
-            config["dpres"]["api_host"], HTTPAdapter(max_retries=retry)
-        )
-
-        return session
+        super().__init__(api="2.0", config=config)
 
     def search(self, page=1, limit=1000, query=None):
         """
@@ -150,18 +64,12 @@ class AccessClient:
         :param str query: Search query based on Solr's dialect of the
                           Lucene query syntax.
         """
-        params = {
-            "page": page,
-            "limit": limit
-        }
+        params = {"page": page, "limit": limit}
 
         if query:
             params["q"] = query
 
-        response = self.session.get(
-            f"{self.base_url}/search",
-            params=params
-        )
+        response = self.session.get(f"{self.base_url}/search", params=params)
         data = response.json()["data"]
 
         prev_url = None
@@ -193,7 +101,7 @@ class AccessClient:
             client=self,
             aip_id=aip_id,
             catalog=catalog,
-            archive_format=archive_format
+            archive_format=archive_format,
         )
         dip_request.disseminate()
 
@@ -238,11 +146,13 @@ class AccessClient:
         for entry in entries:
             entry.pop("download")
             entry["transfer_id"] = entry.pop("id")
-            entry["date"] = datetime.strptime(entry["date"],
-                                              '%Y-%m-%dT%H:%M:%SZ')
+            entry["date"] = datetime.strptime(
+                entry["date"], "%Y-%m-%dT%H:%M:%SZ"
+            )
             entry["date"] = entry["date"].replace(tzinfo=timezone.utc)
-        entries = sorted(entries, key=lambda entry: entry["date"],
-                         reverse=True)
+        entries = sorted(
+            entries, key=lambda entry: entry["date"], reverse=True
+        )
 
         return entries
 
@@ -259,13 +169,17 @@ class AccessClient:
                   identifiers or if the identifiers are faulty.
         """
         if file_type not in ["xml", "html"]:
-            raise ValueError(f"Invalid file type '{file_type}': Only 'xml' "
-                             "and 'html' file formats are accepted")
+            raise ValueError(
+                f"Invalid file type '{file_type}': Only 'xml' "
+                "and 'html' file formats are accepted"
+            )
 
         sip_id = quote(sip_id, safe="")
         transfer_id = quote(transfer_id, safe="")
-        url = (f"{self.base_url}/ingest/report/{sip_id}/{transfer_id}"
-               f"?type={file_type}")
+        url = (
+            f"{self.base_url}/ingest/report/{sip_id}/{transfer_id}"
+            f"?type={file_type}"
+        )
         try:
             response = self.session.get(url)
         except requests.exceptions.HTTPError as error:
@@ -300,6 +214,7 @@ class DIPRequest:
     """
     Object used to perform a DIP dissemination and download
     """
+
     def __init__(self, client, aip_id, catalog=None, archive_format="zip"):
         """
         Create a DIPRequest.
@@ -372,11 +287,11 @@ class DIPRequest:
 
         response = self.session.post(
             f"{self.base_url}/preserved/{self.aip_id}/disseminate",
-            params=params
+            params=params,
         )
         data = response.json()["data"]
 
-        self.dip_id = data['disseminated'].split('/')[-1]
+        self.dip_id = data["disseminated"].split("/")[-1]
 
     def check_status(self, poll=False):
         """

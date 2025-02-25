@@ -18,7 +18,7 @@ def home_config_path(testpath, monkeypatch):
     """
     Path to the user's configuration file in a mocked home directory
     """
-    home_dir = (testpath / "home" / "testuser")
+    home_dir = testpath / "home" / "testuser"
     monkeypatch.setenv("HOME", str(home_dir))
 
     config_dir = home_dir / ".config" / "dpres_access_rest_api_client"
@@ -44,9 +44,7 @@ def mock_config(monkeypatch, home_config_path):
     config = ConfigParser()
     config.read(str(home_config_path))
 
-    monkeypatch.setattr(
-        "dpres_access_rest_api_client.client.CONFIG", config
-    )
+    monkeypatch.setattr("dpres_access_rest_api_client.base.CONFIG", config)
 
     return config
 
@@ -80,7 +78,7 @@ def client(mock_config):
     """
     AccessClient instance
     """
-    from dpres_access_rest_api_client.client import AccessClient
+    from dpres_access_rest_api_client.v2.client import AccessClient
 
     client = AccessClient(config=mock_config)
 

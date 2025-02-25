@@ -11,7 +11,7 @@ import click
 import humanize
 import tabulate
 
-from .client import AccessClient, get_poll_interval_iter
+from .v2.client import AccessClient, get_poll_interval_iter
 
 from .config import write_default_config
 

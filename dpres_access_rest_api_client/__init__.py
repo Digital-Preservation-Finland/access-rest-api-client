@@ -1,10 +1,11 @@
 """
 dpres-access-rest-api-client default imports
 """
+
 from pkg_resources import DistributionNotFound, get_distribution
 
 # flake8: noqa
-from .client import AccessClient, DIPRequest
+from .v2.client import AccessClient, DIPRequest
 
 try:
     # pylint: disable=no-member

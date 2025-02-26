@@ -1,6 +1,7 @@
 """
 Client module to utilize National Digital Preservation Services REST API 3.0.
 """
+
 import os
 from requests.auth import HTTPBasicAuth
 from tusclient import client
@@ -30,8 +31,9 @@ class AccessClient(BaseClient):
         :return: TusClient object.
         """
         tus_client = client.TusClient(self.tus_endpoint)
-        auth = HTTPBasicAuth(username=self.session.auth[0],
-                             password=self.session.auth[1])
+        auth = HTTPBasicAuth(
+            username=self.session.auth[0], password=self.session.auth[1]
+        )
         tus_client.headers["User-Agent"] = self.session.headers["User-Agent"]
         tus_client = auth(tus_client)
         return tus_client

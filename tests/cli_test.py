@@ -3,6 +3,8 @@ dpres_access_rest_api_client.cli tests
 """
 from urllib.parse import urlencode
 
+import pytest
+
 
 def test_help(cli_runner):
     """
@@ -11,7 +13,7 @@ def test_help(cli_runner):
     result = cli_runner(["--help"])
 
     # Commands are listed in the help output
-    commands = ["dip", "ingest-report", "search", "write-config"]
+    commands = ["dip", "ingest-report", "search", "upload", "write-config"]
     for command in commands:
         assert command in result.output
 
@@ -209,7 +211,7 @@ def test_download(cli_runner, requests_mock, testpath):
 
     assert download_path.is_file()
     assert download_path.read_bytes() == \
-        b"This is a complete DIP in a ZIP sent in a blip"
+           b"This is a complete DIP in a ZIP sent in a blip"
 
     # DIP deletion should default to True
     assert 'delete' in output
@@ -484,3 +486,17 @@ def test_save_ingest_report_to_path(cli_runner, requests_mock, testpath):
 
     assert download_path.is_file()
     assert download_path.read_bytes() == b"html ingest report"
+
+
+@pytest.mark.usefixtures("mock_tus_endpoints")
+def test_upload_file(cli_runner, transfer_id, uploadable_file_path_obj):
+    """Test that the click-application can upload file."""
+
+    commands = [
+        "upload",
+        "--chunk-size", "3",
+        f"{uploadable_file_path_obj}"
+    ]
+    result = cli_runner(commands)
+    assert result.exit_code == 0
+    assert f"{transfer_id}" in result.output

@@ -1,7 +1,7 @@
 """
 Client module to utilize National Digital Preservation Services REST API 3.0.
 """
-
+import os
 from requests.auth import HTTPBasicAuth
 from tusclient import client
 from tusclient.storage import filestorage
@@ -54,18 +54,22 @@ class AccessClient(BaseClient):
         """
         return self._tus_endpoint
 
-    def uploader(self, file_path, chunk_size=None, store_url=True):
+    def uploader(self, file_path, chunk_size=None, store_url=False):
         """Create TUS Uploader object tailored for Digital Preservation
         Service.
 
-        :param file_path:
-        :param chunk_size:
-        :param store_url:
-        :return:
+        :param file_path: String path to the file that will be uploaded.
+        :param chunk_size: Integer value on how big of a bytes each chunk
+            should be when uploading. None for no limit.
+        :param store_url: Boolean whether to cache the URLs for given file
+            to later try and resume. Defaulted to False due to current
+            buggy issue: https://github.com/tus/tus-py-client/issues/103.
+        :return: TUS Uploader-instance.
         """
         kwargs = {
             "metadata": {
                 "contract_id": self.contract_id,
+                "filename": os.path.basename(file_path),
             }
         }
         if chunk_size:

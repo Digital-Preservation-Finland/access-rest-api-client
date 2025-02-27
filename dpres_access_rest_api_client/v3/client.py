@@ -80,7 +80,8 @@ class AccessClient(BaseClient):
             kwargs["verify_tls_cert"] = False
 
         if store_url:
-            storage = filestorage.FileStorage("access_rest_api_client_storage")
+            storage = filestorage.FileStorage(
+                ".cache/access_rest_api_client_storage")
             kwargs["store_url"] = True
             kwargs["url_storage"] = storage
 

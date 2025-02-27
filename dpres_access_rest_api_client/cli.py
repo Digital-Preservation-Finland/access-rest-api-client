@@ -12,6 +12,7 @@ import humanize
 import tabulate
 
 from .v2.client import AccessClient, get_poll_interval_iter
+from .v3.client import AccessClient as ClientV3
 
 from .config import write_default_config
 
@@ -30,6 +31,7 @@ def cli(ctx):
     DPRES Access REST API client
     """
     ctx.obj.client_v2 = AccessClient()
+    ctx.obj.client_v3 = ClientV3()
 
 
 @cli.command(
@@ -361,6 +363,42 @@ def get(ctx, sip_id, path, transfer_id, latest, file_type):
         click.echo(f"Ingest report saved to {path}")
     else:
         click.echo(report)
+
+
+@cli.command(help="Upload package to DPRES Service")
+@click.argument(
+    "file_path", type=click.Path(exists=True, file_okay=True, readable=True)
+)
+@click.option(
+    "--chunk-size",
+    type=int,
+    default=8192,
+    help=(
+        "How big of a chunk size each part will be when uploading "
+        "to DPRES Service"
+    ),
+)
+@click.option(
+    "--enable-resumable",
+    type=bool,
+    is_flag=True,
+    default=False,
+    help="Enable resumable",
+)
+@click.pass_context
+def upload(ctx, chunk_size, enable_resumable, file_path):
+    uploader = ctx.obj.client_v3.uploader(file_path=str(file_path),
+                                          chunk_size=chunk_size,
+                                          store_url=enable_resumable)
+    upload_length = uploader.get_file_size()
+    with click.progressbar(length=upload_length,
+                           label="Uploading to DPRES") as bar:
+        while uploader.offset < upload_length:
+            uploader.upload_chunk()
+            bar.update(uploader.offset)
+    transfer_id = uploader.url.split("/")[-1]
+    click.echo(
+        f"Package uploaded successfully! Your transfer ID is {transfer_id}.")
 
 
 def main():

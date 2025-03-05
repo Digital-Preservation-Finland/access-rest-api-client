@@ -1,9 +1,9 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 setup(
     name='dpres-access-rest-api-client',
-    packages=["dpres_access_rest_api_client"],
+    packages=find_packages(include=["dpres_access_rest_api_client*"]),
     package_dir={
         "dpres_access_rest_api_client": "dpres_access_rest_api_client"
     },

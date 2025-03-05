@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.X] - YYYY-MM-DD
+### Added
+ - Client command for uploading transfer
+
 ## [0.6] - 2024-04-03
 ### Added
  - Installation instructions for AlmaLinux 9 using RPM packages

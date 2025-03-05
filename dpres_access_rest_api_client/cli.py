@@ -387,9 +387,9 @@ def get(ctx, sip_id, path, transfer_id, latest, file_type):
 )
 @click.pass_context
 def upload(ctx, chunk_size, enable_resumable, file_path):
-    uploader = ctx.obj.client_v3.uploader(file_path=str(file_path),
-                                          chunk_size=chunk_size,
-                                          store_url=enable_resumable)
+    uploader = ctx.obj.client_v3.create_uploader(file_path=str(file_path),
+                                                 chunk_size=chunk_size,
+                                                 store_url=enable_resumable)
     upload_length = uploader.get_file_size()
     with click.progressbar(length=upload_length,
                            label="Uploading to DPRES") as bar:

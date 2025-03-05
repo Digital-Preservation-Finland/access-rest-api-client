@@ -56,7 +56,7 @@ class AccessClient(BaseClient):
         """
         return self._tus_endpoint
 
-    def uploader(self, file_path, chunk_size=None, store_url=False):
+    def create_uploader(self, file_path, chunk_size=None, store_url=False):
         """Create TUS Uploader object tailored for Digital Preservation
         Service.
 

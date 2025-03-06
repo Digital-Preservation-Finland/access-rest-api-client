@@ -391,11 +391,16 @@ def upload(ctx, chunk_size, enable_resumable, file_path):
                                                  chunk_size=chunk_size,
                                                  store_url=enable_resumable)
     upload_length = uploader.get_file_size()
+    current_offset = uploader.offset
     with click.progressbar(length=upload_length,
                            label="Uploading to DPRES") as bar:
         while uploader.offset < upload_length:
             uploader.upload_chunk()
-            bar.update(uploader.offset)
+            # progressbar updates in "steps" so we need to provide the
+            # difference between new offset and previous offset so that
+            # the bar displays correctly.
+            bar.update(abs(uploader.offset - current_offset))
+            current_offset = uploader.offset
     transfer_id = uploader.url.split("/")[-1]
     click.echo(
         f"Package uploaded successfully! Your transfer ID is {transfer_id}.")

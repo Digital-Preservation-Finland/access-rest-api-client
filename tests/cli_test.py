@@ -1,6 +1,7 @@
 """
 dpres_access_rest_api_client.cli tests
 """
+
 from urllib.parse import urlencode
 
 import pytest
@@ -39,19 +40,21 @@ def test_write_config(cli_runner, home_config_path):
     assert home_config_path.read_text() == "overwritten config"
 
 
-def test_search(cli_runner, requests_mock):
+def test_search(cli_runner, access_rest_api_host, requests_mock):
     """
     Test that a search can be performed
     """
-    qs_encoded = urlencode({
-        "page": 1,
-        "limit": 1000,
-        # Default search query if user didn't provide one
-        "q": "pkg_type:AIP"
-    })
+    qs_encoded = urlencode(
+        {
+            "page": 1,
+            "limit": 1000,
+            # Default search query if user didn't provide one
+            "q": "pkg_type:AIP",
+        }
+    )
 
     requests_mock.get(
-        f"http://fakeapi/api/2.0/urn:uuid:fake_contract_id/"
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/"
         f"search?{qs_encoded}",
         json={
             "status": "success",
@@ -64,7 +67,7 @@ def test_search(cli_runner, requests_mock):
                         ),
                         "createdate": "2021-08-01T08:59:05Z",
                         "id": "spam",
-                        "pkg_type": "AIP"
+                        "pkg_type": "AIP",
                     },
                     {
                         "location": (
@@ -74,14 +77,12 @@ def test_search(cli_runner, requests_mock):
                         "createdate": "2021-08-02T09:01:58Z",
                         "lastmoddate": "2021-08-03T09:01:58Z",
                         "id": "eggs",
-                        "pkg_type": "AIP"
-                    }
+                        "pkg_type": "AIP",
+                    },
                 ],
-                "links": {
-                    "self": "/"
-                }
-            }
-        }
+                "links": {"self": "/"},
+            },
+        },
     )
 
     result = cli_runner(["search"])
@@ -102,14 +103,14 @@ def test_search(cli_runner, requests_mock):
     assert "eggs" in output
 
 
-def test_search_query(cli_runner, requests_mock):
+def test_search_query(cli_runner, access_rest_api_host, requests_mock):
     """
     Test performing a search with a custom query
     """
     qs_encoded = urlencode({"page": 1, "limit": 1000, "q": "mets_OBJID:eggs"})
 
     requests_mock.get(
-        f"http://fakeapi/api/2.0/urn:uuid:fake_contract_id/"
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/"
         f"search?{qs_encoded}",
         json={
             "status": "success",
@@ -123,14 +124,12 @@ def test_search_query(cli_runner, requests_mock):
                         "createdate": "2021-08-02T09:01:58Z",
                         "lastmoddate": "2021-08-03T09:01:58Z",
                         "id": "eggs",
-                        "pkg_type": "AIP"
+                        "pkg_type": "AIP",
                     }
                 ],
-                "links": {
-                    "self": "/"
-                }
-            }
-        }
+                "links": {"self": "/"},
+            },
+        },
     )
 
     result = cli_runner(["search", "--query", "mets_OBJID:eggs"])
@@ -140,13 +139,13 @@ def test_search_query(cli_runner, requests_mock):
     assert "spam" not in output
 
 
-def test_download(cli_runner, requests_mock, testpath):
+def test_download(cli_runner, access_rest_api_host, requests_mock, testpath):
     """
     Test downloading a DIP using the `download` command
     """
     requests_mock.post(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/preserved/spam/"
-        "disseminate",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/"
+        "preserved/spam/disseminate",
         json={
             "status": "success",
             "data": {
@@ -154,12 +153,12 @@ def test_download(cli_runner, requests_mock, testpath):
                     "/api/2.0/urn:uuid:fake_contract_id/disseminated/"
                     "spam_dip"
                 )
-            }
-        }
+            },
+        },
     )
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
-        "spam_dip",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/"
+        "disseminated/spam_dip",
         json={
             "status": "success",
             "data": {
@@ -169,29 +168,29 @@ def test_download(cli_runner, requests_mock, testpath):
                         "/api/2.0/urn:uuid:fake_contract_id/disseminated/"
                         "spam_dip/download"
                     )
-                }
-            }
-        }
+                },
+            },
+        },
     )
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
-        "spam_dip/download",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/"
+        "disseminated/spam_dip/download",
         content=b"This is a complete DIP in a ZIP sent in a blip",
         headers={
             # requests-mock does not generate a Content-Length header
             # automatically
             "Content-Length": "46"
-        }
+        },
     )
     requests_mock.delete(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
-        "spam_dip",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/"
+        "disseminated/spam_dip",
         json={
             "status": "success",
             "data": {
                 "deleted": "true",
-            }
-        }
+            },
+        },
     )
 
     download_dir = testpath / "download"
@@ -199,9 +198,9 @@ def test_download(cli_runner, requests_mock, testpath):
 
     download_path = download_dir / "spam.zip"
 
-    result = cli_runner([
-        "dip", "download", "--path", str(download_path), "spam"
-    ])
+    result = cli_runner(
+        ["dip", "download", "--path", str(download_path), "spam"]
+    )
     output = result.output
 
     assert f"downloading to {download_path}" in output
@@ -210,36 +209,36 @@ def test_download(cli_runner, requests_mock, testpath):
     assert "Downloading (46 Bytes)" in output
 
     assert download_path.is_file()
-    assert download_path.read_bytes() == \
-           b"This is a complete DIP in a ZIP sent in a blip"
+    expected_bytes = b"This is a complete DIP in a ZIP sent in a blip"
+    assert download_path.read_bytes() == expected_bytes
 
     # DIP deletion should default to True
-    assert 'delete' in output
+    assert "delete" in output
 
 
-def test_delete_dip_query(cli_runner, requests_mock):
+def test_delete_dip_query(cli_runner, access_rest_api_host, requests_mock):
     """
     Test performing DIP deletion with both a successful deletion
     and an unsuccessful deletion.
     """
     requests_mock.delete(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
-        "spam_dip",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/"
+        "disseminated/spam_dip",
         json={
             "status": "success",
             "data": {
                 "deleted": "true",
-            }
-        }
+            },
+        },
     )
     requests_mock.delete(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
-        "not_found_dip",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/"
+        "disseminated/not_found_dip",
         json={
             "status": "success",
             "data": {
                 "deleted": "false",
-            }
+            },
         },
     )
 
@@ -255,13 +254,13 @@ def test_delete_dip_query(cli_runner, requests_mock):
     assert "DIP could not be deleted" in output
 
 
-def test_list_ingest_reports(cli_runner, requests_mock):
+def test_list_ingest_reports(cli_runner, access_rest_api_host, requests_mock):
     """
     Test listing available ingest reports with 'ingest-report list' command.
     """
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id",
         json={
             "status": "success",
             "data": {
@@ -269,32 +268,40 @@ def test_list_ingest_reports(cli_runner, requests_mock):
                     {
                         "date": "2022-01-01T00:00:00Z",
                         "download": {
-                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
-                                     "/ingest/report/doi:fake_id/"
-                                     "fake_transfer_id_1?type=html"),
-                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
-                                    "/ingest/report/doi:fake_id/"
-                                    "fake_transfer_id_1?type=xml")
+                            "html": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_1?type=html"
+                            ),
+                            "xml": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_1?type=xml"
+                            ),
                         },
                         "id": "fake_transfer_id_1",
-                        "status": "accepted"
+                        "status": "accepted",
                     },
                     {
                         "date": "2022-01-02T00:00:00Z",
                         "download": {
-                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
-                                     "/ingest/report/doi:fake_id/"
-                                     "fake_transfer_id_2?type=html"),
-                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
-                                    "/ingest/report/doi:fake_id/"
-                                    "fake_transfer_id_2?type=xml")
+                            "html": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_2?type=html"
+                            ),
+                            "xml": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_2?type=xml"
+                            ),
                         },
                         "id": "fake_transfer_id_2",
-                        "status": "rejected"
-                    }
+                        "status": "rejected",
+                    },
                 ]
-            }
-        }
+            },
+        },
     )
 
     result = cli_runner(["ingest-report", "list", "doi:fake_id"])
@@ -308,15 +315,15 @@ def test_list_ingest_reports(cli_runner, requests_mock):
     assert "fake_transfer_id_2" in output
 
 
-def test_no_ingest_reports(cli_runner, requests_mock):
+def test_no_ingest_reports(cli_runner, access_rest_api_host, requests_mock):
     """
     Test that CLI gives a sensible message when there are no ingest reports
     available.
     """
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id",
-        status_code=404
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id",
+        status_code=404,
     )
 
     result = cli_runner(["ingest-report", "list", "doi:fake_id"])
@@ -325,48 +332,75 @@ def test_no_ingest_reports(cli_runner, requests_mock):
     assert output == "No ingest reports found for SIP id 'doi:fake_id'\n"
 
 
-def test_no_ingest_report(cli_runner, requests_mock):
+def test_no_ingest_report(cli_runner, access_rest_api_host, requests_mock):
     """
     Test that CLI gives a sensible message when a spesified ingest report is
     not available.
     """
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id?type=html",
-        status_code=404
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id?type=html",
+        status_code=404,
     )
 
-    result = cli_runner(["ingest-report", "get", "doi:fake_id",
-                         "--transfer-id", "fake_transfer_id", "--file-type",
-                         "html"])
+    result = cli_runner(
+        [
+            "ingest-report",
+            "get",
+            "doi:fake_id",
+            "--transfer-id",
+            "fake_transfer_id",
+            "--file-type",
+            "html",
+        ]
+    )
 
-    assert result.output == ("No ingest report was found with given "
-                             "parameters\n")
+    assert result.output == (
+        "No ingest report was found with given " "parameters\n"
+    )
 
 
-def test_get_ingest_report_with_correct_file_type(cli_runner, requests_mock):
+def test_get_ingest_report_with_correct_file_type(
+    cli_runner, access_rest_api_host, requests_mock
+):
     """
     Test getting an ingest report with the correct file type.
     """
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id?type=html",
-        content=b"html ingest report"
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id?type=html",
+        content=b"html ingest report",
     )
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id?type=xml",
-        content=b"xml ingest report"
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id?type=xml",
+        content=b"xml ingest report",
     )
 
-    html_report = cli_runner(["ingest-report", "get", "doi:fake_id",
-                              "--transfer-id", "fake_transfer_id",
-                              "--file-type", "html"])
+    html_report = cli_runner(
+        [
+            "ingest-report",
+            "get",
+            "doi:fake_id",
+            "--transfer-id",
+            "fake_transfer_id",
+            "--file-type",
+            "html",
+        ]
+    )
     assert html_report.output == "html ingest report\n"
 
-    xml_report = cli_runner(["ingest-report", "get", "doi:fake_id",
-                             "--transfer-id", "fake_transfer_id",
-                             "--file-type", "xml"])
+    xml_report = cli_runner(
+        [
+            "ingest-report",
+            "get",
+            "doi:fake_id",
+            "--transfer-id",
+            "fake_transfer_id",
+            "--file-type",
+            "xml",
+        ]
+    )
     assert xml_report.output == "xml ingest report\n"
 
 
@@ -385,20 +419,30 @@ def test_get_ingest_report_with_conflicting_report_specification(cli_runner):
     Test that calling 'ingest-report get' with both --latest and --transfer-id
     leads to an error.
     """
-    result = cli_runner(["ingest-report", "get", "sip_id", "--latest",
-                         "--transfer-id", "transfer_id"])
+    result = cli_runner(
+        [
+            "ingest-report",
+            "get",
+            "sip_id",
+            "--latest",
+            "--transfer-id",
+            "transfer_id",
+        ]
+    )
     assert "Both --latest and --transfer-id provided" in result.output
     assert result.exit_code != 0
 
 
-def test_getting_latest_ingest_report(cli_runner, requests_mock):
+def test_getting_latest_ingest_report(
+    cli_runner, access_rest_api_host, requests_mock
+):
     """
     Test that calling 'ingest-report get' with --latest flag returns
     the latest ingest report out of many options.
     """
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id",
         json={
             "status": "success",
             "data": {
@@ -406,81 +450,113 @@ def test_getting_latest_ingest_report(cli_runner, requests_mock):
                     {
                         "date": "1980-01-01T00:00:00Z",
                         "download": {
-                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
-                                     "/ingest/report/doi:fake_id/"
-                                     "fake_transfer_id_1?type=html"),
-                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
-                                    "/ingest/report/doi:fake_id/"
-                                    "fake_transfer_id_1?type=xml")
+                            "html": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_1?type=html"
+                            ),
+                            "xml": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_1?type=xml"
+                            ),
                         },
                         "id": "fake_transfer_id_1",
-                        "status": "accepted"
+                        "status": "accepted",
                     },
                     {
                         "date": "2000-01-01T00:00:00Z",
                         "download": {
-                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
-                                     "/ingest/report/doi:fake_id/"
-                                     "fake_transfer_id_2?type=html"),
-                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
-                                    "/ingest/report/doi:fake_id/"
-                                    "fake_transfer_id_2?type=xml")
+                            "html": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_2?type=html"
+                            ),
+                            "xml": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_2?type=xml"
+                            ),
                         },
                         "id": "fake_transfer_id_2",
-                        "status": "rejected"
+                        "status": "rejected",
                     },
                     {
                         "date": "1990-01-01T00:00:00Z",
                         "download": {
-                            "html": ("/api/2.0/urn:uuid:fake_contract_id"
-                                     "/ingest/report/doi:fake_id/"
-                                     "fake_transfer_id_3?type=html"),
-                            "xml": ("/api/2.0/urn:uuid:fake_contract_id"
-                                    "/ingest/report/doi:fake_id/"
-                                    "fake_transfer_id_3?type=xml")
+                            "html": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_3?type=html"
+                            ),
+                            "xml": (
+                                "/api/2.0/urn:uuid:fake_contract_id"
+                                "/ingest/report/doi:fake_id/"
+                                "fake_transfer_id_3?type=xml"
+                            ),
                         },
                         "id": "fake_transfer_id_3",
-                        "status": "accepted"
-                    }
+                        "status": "accepted",
+                    },
                 ]
-            }
-        }
+            },
+        },
     )
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id_1?type=html",
-        content=b"oldest ingest report"
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id_1?type=html",
+        content=b"oldest ingest report",
     )
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id_2?type=html",
-        content=b"latest ingest report"
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id_2?type=html",
+        content=b"latest ingest report",
     )
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id_3?type=html",
-        content=b"old ingest report"
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id_3?type=html",
+        content=b"old ingest report",
     )
 
-    result = cli_runner(["ingest-report", "get", "doi:fake_id", "--latest",
-                         "--file-type", "html"])
+    result = cli_runner(
+        [
+            "ingest-report",
+            "get",
+            "doi:fake_id",
+            "--latest",
+            "--file-type",
+            "html",
+        ]
+    )
     assert result.output == "latest ingest report\n"
 
 
-def test_save_ingest_report_to_path(cli_runner, requests_mock, testpath):
+def test_save_ingest_report_to_path(
+    cli_runner, access_rest_api_host, requests_mock, testpath
+):
     """
     Test that ingest report is saved to the file system when a path is given.
     """
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id?type=html",
-        content=b"html ingest report"
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id?type=html",
+        content=b"html ingest report",
     )
 
     download_path = testpath / "ingest_report.html"
-    result = cli_runner(["ingest-report", "get", "doi:fake_id",
-                         "--transfer-id", "fake_transfer_id", "--file-type",
-                         "html", "--path", download_path])
+    result = cli_runner(
+        [
+            "ingest-report",
+            "get",
+            "doi:fake_id",
+            "--transfer-id",
+            "fake_transfer_id",
+            "--file-type",
+            "html",
+            "--path",
+            download_path,
+        ]
+    )
 
     assert result.output == f"Ingest report saved to {download_path}\n"
 
@@ -492,11 +568,7 @@ def test_save_ingest_report_to_path(cli_runner, requests_mock, testpath):
 def test_upload_file(cli_runner, transfer_id, uploadable_file_path_obj):
     """Test that the click-application can upload file."""
 
-    commands = [
-        "upload",
-        "--chunk-size", "3",
-        f"{uploadable_file_path_obj}"
-    ]
+    commands = ["upload", "--chunk-size", "3", f"{uploadable_file_path_obj}"]
     result = cli_runner(commands)
     assert result.exit_code == 0
     assert f"{transfer_id}" in result.output

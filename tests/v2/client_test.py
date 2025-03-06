@@ -10,14 +10,14 @@ import pytest
 import dpres_access_rest_api_client.v2.client
 
 
-def test_dip_request(testpath, client_v2, requests_mock):
+def test_dip_request(testpath, access_rest_api_host, client_v2, requests_mock):
     """
     Test downloading a DIP using the AccessClient methods
     """
     download_path = testpath / "spam.zip"
     requests_mock.post(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/preserved/spam/"
-        "disseminate",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/preserved/"
+        "spam/disseminate",
         json={
             "status": "success",
             "data": {
@@ -29,16 +29,16 @@ def test_dip_request(testpath, client_v2, requests_mock):
         },
     )
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
-        "spam_dip",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/"
+        "disseminated/spam_dip",
         json={
             "status": "success",
             "data": {"complete": "false", "actions": {}},
         },
     )
     requests_mock.delete(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
-        "spam_dip",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/"
+        "disseminated/spam_dip",
         json={
             "status": "success",
             "data": {
@@ -63,8 +63,8 @@ def test_dip_request(testpath, client_v2, requests_mock):
     assert str(exc.value) == "DIP is not ready for deletion"
 
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
-        "spam_dip",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/"
+        "disseminated/spam_dip",
         json={
             "status": "success",
             "data": {
@@ -79,8 +79,8 @@ def test_dip_request(testpath, client_v2, requests_mock):
         },
     )
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/disseminated/"
-        "spam_dip/download",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/"
+        "disseminated/spam_dip/download",
         content=b"This is a complete DIP in a ZIP sent in a blip",
         headers={
             # requests-mock does not generate a Content-Length header
@@ -94,10 +94,8 @@ def test_dip_request(testpath, client_v2, requests_mock):
     dip_request.download(download_path)
 
     assert download_path.is_file()
-    assert (
-        download_path.read_bytes()
-        == b"This is a complete DIP in a ZIP sent in a blip"
-    )
+    expected_bytes = b"This is a complete DIP in a ZIP sent in a blip"
+    assert download_path.read_bytes() == expected_bytes
 
     # DIP deletion should now return True
     delete_request = dip_request.delete()
@@ -132,7 +130,9 @@ def test_poll_interval_iter():
         assert math.isclose(next(poll_interval_iter), 60, abs_tol=0.5)
 
 
-def test_get_ingest_report_entries(client_v2, requests_mock):
+def test_get_ingest_report_entries(
+    access_rest_api_host, client_v2, requests_mock
+):
     """
     Test that list of ingest report entries are returned for given sip_id
     in correctly modified form: download key is removed, date converted
@@ -140,8 +140,8 @@ def test_get_ingest_report_entries(client_v2, requests_mock):
     in the list.
     """
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id",
         json={
             "status": "success",
             "data": {
@@ -201,18 +201,18 @@ def test_get_ingest_report_entries(client_v2, requests_mock):
     assert received_entries == correct_result
 
 
-def test_get_ingest_report(client_v2, requests_mock):
+def test_get_ingest_report(access_rest_api_host, client_v2, requests_mock):
     """
     Test that ingest report is returned for given id with correct file type
     """
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id?type=html",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id?type=html",
         content=b"html ingest report",
     )
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id?type=xml",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id?type=xml",
         content=b"xml ingest report",
     )
 
@@ -233,18 +233,22 @@ def test_invalid_ingest_report_file_type(client_v2):
     ValueError
     """
     with pytest.raises(ValueError) as error:
-        client_v2.get_ingest_report("sip_id", "transfer_id", "invalid_file_type")
+        client_v2.get_ingest_report(
+            "sip_id", "transfer_id", "invalid_file_type"
+        )
     assert "Invalid file type 'invalid_file_type'" in str(error.value)
 
 
-def test_get_latest_ingest_report(client_v2, requests_mock):
+def test_get_latest_ingest_report(
+    access_rest_api_host, client_v2, requests_mock
+):
     """
     Test that the latest ingest report is returned when there exists many
     ingest reports for a package.
     """
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id",
         json={
             "status": "success",
             "data": {
@@ -305,18 +309,18 @@ def test_get_latest_ingest_report(client_v2, requests_mock):
         },
     )
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id_1?type=html",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id_1?type=html",
         content=b"oldest ingest report",
     )
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id_2?type=html",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id_2?type=html",
         content=b"latest ingest report",
     )
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id_3?type=html",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id_3?type=html",
         content=b"old ingest report",
     )
 
@@ -324,14 +328,16 @@ def test_get_latest_ingest_report(client_v2, requests_mock):
     assert report == b"latest ingest report"
 
 
-def test_no_latest_ingest_report(client_v2, requests_mock):
+def test_no_latest_ingest_report(
+    access_rest_api_host, client_v2, requests_mock
+):
     """
     Test that if there are no ingest reports when trying to get the latest
     report, None is returned.
     """
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id",
         status_code=404,
     )
 
@@ -339,13 +345,13 @@ def test_no_latest_ingest_report(client_v2, requests_mock):
     assert report is None
 
 
-def test_no_ingest_report(client_v2, requests_mock):
+def test_no_ingest_report(access_rest_api_host, client_v2, requests_mock):
     """
     Test that if there is no ingest report with given ids, None is returned.
     """
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id/fake_transfer_id?type=html",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id/fake_transfer_id?type=html",
         status_code=404,
     )
 
@@ -355,14 +361,14 @@ def test_no_ingest_report(client_v2, requests_mock):
     assert report is None
 
 
-def test_no_ingest_reports(client_v2, requests_mock):
+def test_no_ingest_reports(access_rest_api_host, client_v2, requests_mock):
     """
     Test that if there are no ingest reports for a SIP, empty list is returned.
     """
     # When there are no available ingest reports, access-rest-api returns 404
     requests_mock.get(
-        "http://fakeapi/api/2.0/urn:uuid:fake_contract_id/ingest/report/"
-        "doi%3Afake_id",
+        f"{access_rest_api_host}/api/2.0/urn:uuid:fake_contract_id/ingest/"
+        "report/doi%3Afake_id",
         status_code=404,
     )
 

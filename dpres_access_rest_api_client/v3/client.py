@@ -3,6 +3,7 @@ Client module to utilize National Digital Preservation Services REST API 3.0.
 """
 
 import os
+import requests
 from requests.auth import HTTPBasicAuth
 from tusclient import client
 from tusclient.storage import filestorage
@@ -87,3 +88,15 @@ class AccessClient(BaseClient):
 
         uploader = self.tus_client.uploader(file_path=file_path, **kwargs)
         return uploader
+
+    def get_transfer(self, transfer_id):
+        """Get transfer information from Digital Preservation Service.
+
+        :param transfer_id: Transfer ID to fetch the information for.
+        :return: JSON data from successful response.
+        :raises HTTPError: When response code is within 400 - 500 range.
+        """
+
+        url = f"{self.base_url}/transfers/{transfer_id}"
+        response = self.session.get(url)
+        return response.json()["data"]

@@ -47,14 +47,14 @@ def test_get_transfer(client_v3, transfer_id, transfer_exists):
     ],
     ids=["Get report", "Unauthorized access attempt"],
 )
-def test_get_transfer_report(client_v3, transfer_id, report_exists):
+def test_get_validation_report(client_v3, transfer_id, report_exists):
     """Test that we can get specific transfer's report to download."""
     if report_exists:
-        report = client_v3.get_transfer_report(transfer_id)
+        report = client_v3.get_validation_report(transfer_id)
         assert report
     else:
         with pytest.raises(HTTPError):
-            client_v3.get_transfer_report(transfer_id)
+            client_v3.get_validation_report(transfer_id)
 
 
 @pytest.mark.usefixtures("mock_access_rest_api_v3_endpoints")

@@ -82,7 +82,8 @@ class AccessClient(BaseClient):
 
         if store_url:
             storage = filestorage.FileStorage(
-                ".cache/access_rest_api_client_storage")
+                ".cache/access_rest_api_client_storage"
+            )
             kwargs["store_url"] = True
             kwargs["url_storage"] = storage
 
@@ -100,3 +101,18 @@ class AccessClient(BaseClient):
         url = f"{self.base_url}/transfers/{transfer_id}"
         response = self.session.get(url)
         return response.json()["data"]
+
+    def get_validation_report(self, transfer_id, report_type="xml"):
+        """Get validation report for given transfer.
+
+        :param transfer_id: Transfer ID to fetch the report for.
+        :param report_type: Report type to download, either "xml" or "html"
+            (default: xml).
+        :return: Content data in bytes from successful response.
+        :raises HTTPError: When response code is within 400 - 500 range.
+        """
+
+        url = f"{self.base_url}/transfers/{transfer_id}/report"
+        params = {"type": report_type}
+        response = self.session.get(url, params=params)
+        return response.content

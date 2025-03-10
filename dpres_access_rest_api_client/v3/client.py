@@ -3,8 +3,8 @@ Client module to utilize National Digital Preservation Services REST API 3.0.
 """
 
 import os
-import requests
 from requests.auth import HTTPBasicAuth
+from requests.exceptions import HTTPError
 from tusclient import client
 from tusclient.storage import filestorage
 from ..base import BaseClient
@@ -116,3 +116,18 @@ class AccessClient(BaseClient):
         params = {"type": report_type}
         response = self.session.get(url, params=params)
         return response.content
+
+    def delete_transfer(self, transfer_id):
+        """Delete the given transfer information. This will make it so
+        that future call to get transfer information or report is no
+        longer possible.
+
+        :param transfer_id: Transfer ID to delete.
+        :return: True on success, otherwise False.
+        """
+        url = f"{self.base_url}/transfers/{transfer_id}"
+        try:
+            self.session.delete(url)
+            return True
+        except HTTPError:
+            return False

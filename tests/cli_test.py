@@ -572,3 +572,84 @@ def test_upload_file(cli_runner, transfer_id, uploadable_file_path_obj):
     result = cli_runner(commands)
     assert result.exit_code == 0
     assert f"{transfer_id}" in result.output
+
+
+@pytest.mark.usefixtures("mock_access_rest_api_v3_endpoints")
+@pytest.mark.parametrize(
+    ("transfer_id", "transfer_exists"),
+    [
+        ("00000000-0000-0000-0000-000000000001", True),
+        ("99999999-9999-9999-9999-999999999999", False),
+    ],
+    ids=["Get transfer", "No transfer"],
+)
+def test_transfers_info(cli_runner, transfer_id, transfer_exists):
+    """Test that the click-application can get transfer info."""
+
+    commands = ["transfer", "info", f"{transfer_id}"]
+    result = cli_runner(commands)
+    if transfer_exists:
+        assert result.exit_code == 0
+        assert f"{transfer_id}" in result.output
+    else:
+        assert result.exit_code == 1
+
+
+@pytest.mark.usefixtures("mock_access_rest_api_v3_endpoints")
+@pytest.mark.parametrize(
+    ("transfer_id", "transfer_exists", "output_file"),
+    [
+        ("00000000-0000-0000-0000-000000000001", True, False),
+        ("00000000-0000-0000-0000-000000000001", True, True),
+        ("99999999-9999-9999-9999-999999999999", False, False),
+    ],
+    ids=["Download report", "Write to file", "No report"],
+)
+def test_transfers_download_report(
+    cli_runner, transfer_id, transfer_exists, output_file, tmp_path
+):
+    """Test that the click-application can get transfer info."""
+
+    commands = ["transfer", "download-report", f"{transfer_id}"]
+    report_path = tmp_path / "report.xml"
+    if output_file:
+        commands.append("--output")
+        commands.append(f"{report_path}")
+
+    result = cli_runner(commands)
+    if not transfer_exists:
+        assert result.exit_code == 1
+        # Conclude testing here.
+        return
+
+    assert result.exit_code == 0
+
+    if not output_file:
+        assert result.output
+        # Conclude testing here.
+        return
+
+    assert f"{report_path}" in result.output
+    assert report_path.is_file()
+
+
+@pytest.mark.usefixtures("mock_access_rest_api_v3_endpoints")
+@pytest.mark.parametrize(
+    ("transfer_id", "transfer_exists"),
+    [
+        ("00000000-0000-0000-0000-000000000001", True),
+        ("99999999-9999-9999-9999-999999999999", False),
+    ],
+    ids=["Delete transfer", "No transfer"],
+)
+def test_transfers_delete(cli_runner, transfer_id, transfer_exists):
+    """Test that the click-application can get transfer info."""
+
+    commands = ["transfer", "delete", f"{transfer_id}"]
+    result = cli_runner(commands)
+    if transfer_exists:
+        assert result.exit_code == 0
+        assert f"{transfer_id}" in result.output
+    else:
+        assert result.exit_code == 1
+

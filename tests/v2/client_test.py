@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 import pytest
 
+import dpres_access_rest_api_client.base
 import dpres_access_rest_api_client.v2.client
 
 
@@ -114,7 +115,7 @@ def test_poll_interval_iter():
     range
     """
     poll_interval_iter = (
-        dpres_access_rest_api_client.v2.client.get_poll_interval_iter()
+        dpres_access_rest_api_client.base.get_poll_interval_iter()
     )
 
     for _ in range(0, 5):

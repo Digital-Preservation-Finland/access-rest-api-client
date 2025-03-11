@@ -1,6 +1,7 @@
 """Module that provides base client to setup HTTP requests."""
 
 import functools
+import random
 import warnings
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
@@ -116,3 +117,26 @@ class BaseClient:
         )
 
         return session
+
+
+def get_poll_interval_iter():
+    """
+    Return an iterator that can be iterated for poll intervals. This takes
+    care of ramping up the poll interval for longer dissemination tasks.
+    """
+    # First five requests use 3s intervals,
+    # second five use 10s intervals,
+    # and all subsequent intervals are 60s
+    intervals = sorted([3, 10, 60] * 5)
+    intervals.reverse()
+
+    last_interval = 0
+
+    while True:
+        if intervals:
+            last_interval = intervals.pop()
+
+        # Return interval with some additional jitter to ensure multiple
+        # requests are not sent at the same time
+        # (aka the thundering herd problem).
+        yield last_interval + (random.random() * 0.5)  # nosec

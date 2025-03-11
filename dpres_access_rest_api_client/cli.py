@@ -13,7 +13,8 @@ import tabulate
 from click.exceptions import ClickException
 from requests.exceptions import HTTPError
 
-from .v2.client import AccessClient, get_poll_interval_iter
+from .v2.client import AccessClient
+from .base import get_poll_interval_iter
 from .v3.client import AccessClient as ClientV3
 
 from .config import write_default_config
@@ -24,6 +25,14 @@ class Context:
     """Context class for the Click application"""
     client_v2 = None
     client_v3 = None
+
+
+def _spinner_animation():
+    """Provide an interable spinner animation.
+
+    :return: Infinite iterator used to provide a very simple spinner animation.
+    """
+    return itertools.cycle(["|", "|", "/", "/", "-", "-", "\\", "\\"])
 
 
 @click.group()
@@ -140,8 +149,7 @@ def _download_poll_until_ready(dip_request):
     Poll for DIP until it is ready for download. Display a spinner animation
     while the user is waiting.
     """
-    # Infinite iterator used to provide a very simple spinner animation
-    spinner_anim = itertools.cycle(["|", "|", "/", "/", "-", "-", "\\", "\\"])
+    spinner_anim = _spinner_animation()
 
     # Start polling until the disseminated DIP is ready for download
     poll_interval = -0.1
@@ -482,6 +490,90 @@ def delete_transfer(ctx, transfer_id):
         click.echo(f"Transfer ID '{transfer_id}' has been deleted.")
     else:
         raise ClickException(f"No transfer found for '{transfer_id}'.")
+
+
+@transfer.command(
+    "status",
+    help=(
+        "Polls the transfer until it is processed, "
+        "downloads the report, "
+        "then delete the transfer information."
+    ),
+)
+@click.argument("transfer_id")
+@click.pass_context
+def status_transfer(ctx, transfer_id):
+    """Will poll for the given transfer until it is done being processed,
+    then downloads the report to the current directory, then deletes
+    the transfer information from the service."""
+    client = ctx.obj.client_v3
+    status = _poll_until_transfer_processed(
+        client=client, transfer_id=transfer_id
+    )
+    _download_report(client=client, transfer_id=transfer_id, status=status)
+    _delete_report(client=client, transfer_id=transfer_id)
+
+
+def _get_path_for_download():
+    """Separated the path resolution so that we could have easier time to
+    mock.
+    """
+    return Path(".").resolve()
+
+
+def _poll_until_transfer_processed(client, transfer_id):
+    """Shorthand function to keep polling until expected transfer has the
+    expected status to continue with.
+
+    :param client: The client to conduct the request with.
+    :param transfer_id: The transfer ID to poll for.
+    :return: Status of the processed transfer in string.
+    """
+    spinner_anim = _spinner_animation()
+    processed_statuses = ["accepted", "rejected"]
+    current_status = "in_progress"
+    while current_status not in processed_statuses:
+        # Print a status message with a simple spinner animation so that the
+        # user doesn't get antsy
+        click.echo(
+            f"Polling for transfer status... {next(spinner_anim)}"
+            # Carriage return so that the same line is overwritten
+            f"\r",
+            nl=False,
+        )
+        try:
+            data = client.get_transfer(transfer_id=transfer_id)
+        except HTTPError:
+            click.echo("")
+            raise ClickException(f"No transfer found for '{transfer_id}'")
+        current_status = data["status"]
+    click.echo("Polling is done. Transfer has been processed.")
+    click.echo(f"Transfer has the status of '{current_status}'")
+    return current_status
+
+
+def _download_report(client, transfer_id, status):
+    """Shorthand function to keep download report and immediately write
+    to current directory.
+
+    :param client: The client to conduct the request with.
+    :param transfer_id: The transfer ID to poll for.
+    :param status: Status of the transfer
+    """
+    path = _get_path_for_download() / status / f"{transfer_id}.xml"
+    click.echo("Downloading the report...")
+    report = client.get_validation_report(transfer_id=transfer_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(f"{path}", "wb") as file:
+        file.write(report)
+    click.echo(f"Validation report saved to {path}.")
+
+
+def _delete_report(client, transfer_id):
+    """Shorthand function to delete the transfer information."""
+    click.echo("Deleting transfer information...")
+    client.delete_transfer(transfer_id=transfer_id)
+    click.echo("Transfer information deleted.")
 
 
 def main():

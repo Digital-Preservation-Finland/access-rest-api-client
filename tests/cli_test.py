@@ -2,6 +2,7 @@
 dpres_access_rest_api_client.cli tests
 """
 
+from unittest.mock import patch
 from urllib.parse import urlencode
 
 import pytest
@@ -668,8 +669,15 @@ def test_transfers_status(cli_runner, transfer_id, transfer_exists, tmp_path):
     report and delete the transfer information afterwards."""
 
     commands = ["transfer", "status", f"{transfer_id}"]
-    result = cli_runner(commands)
+    report_output_dir = tmp_path / "report_download"
+    with patch("dpres_access_rest_api_client.cli._get_path_for_download") as m:
+        m.return_value = report_output_dir.resolve()
+        result = cli_runner(commands)
+
     if transfer_exists:
         assert result.exit_code == 0
+        assert (
+            report_output_dir / "accepted" / f"{transfer_id}.xml"
+        ).is_file()
     else:
         assert result.exit_code == 1

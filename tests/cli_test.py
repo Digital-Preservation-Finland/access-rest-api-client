@@ -653,3 +653,23 @@ def test_transfers_delete(cli_runner, transfer_id, transfer_exists):
     else:
         assert result.exit_code == 1
 
+
+@pytest.mark.usefixtures("mock_access_rest_api_v3_endpoints_interactive")
+@pytest.mark.parametrize(
+    ("transfer_id", "transfer_exists"),
+    [
+        ("00000000-0000-0000-0000-000000000001", True),
+        ("99999999-9999-9999-9999-999999999999", False),
+    ],
+    ids=["Has transfer", "No transfer"],
+)
+def test_transfers_status(cli_runner, transfer_id, transfer_exists, tmp_path):
+    """Test that the click-application will poll the status, download the
+    report and delete the transfer information afterwards."""
+
+    commands = ["transfer", "status", f"{transfer_id}"]
+    result = cli_runner(commands)
+    if transfer_exists:
+        assert result.exit_code == 0
+    else:
+        assert result.exit_code == 1

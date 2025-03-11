@@ -284,3 +284,99 @@ def mock_access_rest_api_v3_endpoints(access_rest_api_host, contract_id):
                 status_code=delete_transfer_status_code,
             )
         yield
+
+
+@pytest.fixture(scope="function")
+def mock_access_rest_api_v3_endpoints_interactive(access_rest_api_host,
+                                                  contract_id):
+    """Mock access-rest-api v3 endpoints by having dynamic responses.
+    This mock is tailored for the test where whole cycle has to be conducted.
+    """
+    report_exists = False
+    transfer_exists = True
+    transfer_id = "00000000-0000-0000-0000-000000000001"
+    transfer_id_fail = "99999999-9999-9999-9999-999999999999"
+    times_polled = 0
+    times_need_to_poll = 5
+    xml_content = '<?xml version="1.0" encoding="utf-8" ?>\n<root>Whee</root>'
+
+    def get_transfer_response(request, context):
+        """Have to poll at least X amount of times before report starts
+        to exist.
+        """
+        nonlocal report_exists
+        nonlocal times_polled
+        times_polled += 1
+        if times_polled >= times_need_to_poll:
+            actions = {
+                "report": (
+                    f"/api/3.0/{contract_id}/transfers/"
+                    f"{transfer_id}/report"
+                ),
+            }
+            status = "accepted"
+            report_exists = True
+        else:
+            actions = {}
+            status = "in_progress"
+        if not transfer_exists:
+            context.status_code = 404
+            report_exists = False
+        return json.dumps(
+            {
+                "data": {
+                    "actions": actions,
+                    "filename": "accepted_package.tar.gz",
+                    "sip": {
+                        "sip_id": f"{status}-package",
+                        "sip_size": 1,
+                    },
+                    "status": f"{status}",
+                    "timestamp": "Fri, 07 Mar 2025 13:46:44 GMT",
+                    "transfer_id": f"{transfer_id}",
+                },
+                "status": "success",
+            }
+        )
+
+    def get_transfer_report_response(request, context):
+        if not report_exists:
+            context.status_code = 404
+        return xml_content
+
+    def delete_transfer_response(request, context):
+        """Mark as transfer to no longer exist after this is called."""
+        nonlocal report_exists
+        nonlocal transfer_exists
+        if transfer_exists:
+            report_exists = False
+            transfer_exists = False
+        else:
+            context.status_code = 404
+
+    with requests_mock.Mocker() as mock:
+        mock.get(
+            f"{access_rest_api_host}/api/3.0/{contract_id}/transfers/"
+            f"{transfer_id}",
+            text=get_transfer_response,
+            status_code=200,
+        )
+        mock.get(
+            f"{access_rest_api_host}/api/3.0/{contract_id}/transfers/"
+            f"{transfer_id_fail}",
+            json={"status": "fail"},
+            status_code=404,
+        )
+        mock.get(
+            f"{access_rest_api_host}/api/3.0/{contract_id}/transfers/"
+            f"{transfer_id}/report",
+            text=get_transfer_report_response,
+            status_code=200,
+        )
+        mock.delete(
+            f"{access_rest_api_host}/api/3.0/{contract_id}/transfers/"
+            f"{transfer_id}",
+            text=delete_transfer_response,
+            status_code=204,
+        )
+        yield

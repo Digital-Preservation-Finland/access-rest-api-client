@@ -10,6 +10,8 @@ from pathlib import Path
 import click
 import humanize
 import tabulate
+from click.exceptions import ClickException
+from requests.exceptions import HTTPError
 
 from .v2.client import AccessClient, get_poll_interval_iter
 from .v3.client import AccessClient as ClientV3
@@ -404,6 +406,82 @@ def upload(ctx, chunk_size, enable_resumable, file_path):
     transfer_id = uploader.url.split("/")[-1]
     click.echo(
         f"Package uploaded successfully! Your transfer ID is {transfer_id}.")
+
+
+@cli.group("transfer")
+def transfer():
+    """List transfers related commands"""
+    pass
+
+
+@transfer.command("info", help="Display information on given transfer")
+@click.argument("transfer_id")
+@click.pass_context
+def get_transfer_info(ctx, transfer_id):
+    """Get the transfer and display the information"""
+    client = ctx.obj.client_v3
+    try:
+        data = client.get_transfer(transfer_id=transfer_id)
+    except HTTPError:
+        raise ClickException(f"No transfer found for '{transfer_id}'")
+
+    click.echo(f'Transfer ID: {data["transfer_id"]}')
+    click.echo(f'SIP ID: {data["sip"]["sip_id"]}')
+    click.echo(f'Filename: {data["filename"]}')
+    click.echo(f'Status: {data["status"]}')
+    click.echo(f'Timestamp: {data["timestamp"]}')
+
+
+@transfer.command("download-report", help="Download report for given transfer")
+@click.argument("transfer_id")
+@click.option(
+    "--report-type",
+    default="xml",
+    type=click.Choice(["html", "xml"]),
+    help="File type of the returned validation report. Defaults to 'xml'.",
+)
+@click.option(
+    "--output",
+    type=click.Path(dir_okay=False, writable=True),
+    required=False,
+    help=(
+        "Path where the validation report will be saved to."
+        "If not specified, echo to stdout by default."
+    ),
+)
+@click.pass_context
+def download_transfer_report(ctx, transfer_id, report_type, output):
+    """Download given transfer's validation report"""
+    client = ctx.obj.client_v3
+    try:
+        report = client.get_validation_report(
+            transfer_id=transfer_id, report_type=report_type
+        )
+    except HTTPError:
+        raise ClickException(f"No report found for '{transfer_id}'.")
+
+    # Echo or save to given path
+    if output:
+        with open(output, "wb") as file:
+            file.write(report)
+        click.echo(f"Validation report saved to {output}.")
+    else:
+        click.echo(report)
+
+
+@transfer.command(
+    "delete", help="Delete transfer information and their report"
+)
+@click.argument("transfer_id")
+@click.pass_context
+def delete_transfer(ctx, transfer_id):
+    """Delete the transfer and their report permanently."""
+    client = ctx.obj.client_v3
+    is_success = client.delete_transfer(transfer_id=transfer_id)
+    if is_success:
+        click.echo(f"Transfer ID '{transfer_id}' has been deleted.")
+    else:
+        raise ClickException(f"No transfer found for '{transfer_id}'.")
 
 
 def main():

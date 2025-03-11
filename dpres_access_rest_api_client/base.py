@@ -1,5 +1,6 @@
 """Module that provides base client to setup HTTP requests."""
 
+import collections
 import functools
 import random
 import warnings
@@ -11,6 +12,10 @@ import requests
 from requests.adapters import HTTPAdapter
 
 from .config import CONFIG
+
+SearchResult = collections.namedtuple(
+    "SearchResult", ("results", "prev_url", "next_url")
+)
 
 
 class BaseClient:
@@ -26,14 +31,13 @@ class BaseClient:
             config = CONFIG
 
         self._api_version = api
-        self._contract_id = config['dpres']['contract_id']
+        self._contract_id = config["dpres"]["contract_id"]
         # Normalize host by removing the trailing slash. Host is
         # read-only attribute, since changing the host while polling a
         # DIP would cause problems.
         self._host = config["dpres"]["api_host"].rstrip("/")
         self.base_url = (
-            f"{self.host}/api/{self.api_version}/"
-            f"{self.contract_id}"
+            f"{self.host}/api/{self.api_version}/" f"{self.contract_id}"
         )
 
         self.session = self._create_session(config=config)

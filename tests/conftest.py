@@ -402,17 +402,19 @@ def mock_access_rest_api_v3_list_endpoint(access_rest_api_host, contract_id):
             }
         else:
             actions = {}
-        transfers.append({
-            "actions": actions,
-            "filename": f"{status}_{i}_package.tar.gz",
-            "sip": {
-                "sip_id": f"{status}-{i}-package",
-                "sip_size": 1,
-            },
-            "status": f"{status}",
-            "timestamp": "Fri, 11 Mar 2025 12:06:44 GMT",
-            "transfer_id": f"{transfer_id}",
-        })
+        transfers.append(
+            {
+                "actions": actions,
+                "filename": f"{status}_{i}_package.tar.gz",
+                "sip": {
+                    "sip_id": f"{status}-{i}-package",
+                    "sip_size": 1,
+                },
+                "status": f"{status}",
+                "timestamp": "Fri, 11 Mar 2025 12:06:44 GMT",
+                "transfer_id": f"{transfer_id}",
+            }
+        )
 
     def list_transfer_response(request, context):
         limit_filter = request.qs.get("limit", [""])[0]
@@ -428,18 +430,15 @@ def mock_access_rest_api_v3_list_endpoint(access_rest_api_host, contract_id):
             page_filter = "1"
         start_index = int(limit_filter) * (int(page_filter) - 1)
         end_index = int(limit_filter) * (int(page_filter))
-        results = results[start_index:end_index]
+        filtered_results = results[start_index:end_index]
         links = {
-            "self": "",
-            "previous": "",
-            "next": ""
+            "self": "self",
+            "previous": "previous" if start_index > 0 else "",
+            "next": "next" if end_index < len(results) else "",
         }
         response = json.dumps(
             {
-                "data": {
-                    "links": links,
-                    "results": results
-                },
+                "data": {"links": links, "results": filtered_results},
                 "status": "success",
             }
         )

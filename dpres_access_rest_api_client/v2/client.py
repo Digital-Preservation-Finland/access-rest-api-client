@@ -3,7 +3,6 @@ Client module for querying and downloading DIPs using the National Digital
 Preservation Services REST API.
 """
 
-import collections
 from datetime import datetime, timezone
 import functools
 import time
@@ -12,11 +11,7 @@ from pathlib import Path
 
 import requests
 
-from ..base import BaseClient, get_poll_interval_iter
-
-SearchResult = collections.namedtuple(
-    "SearchResult", ("results", "prev_url", "next_url")
-)
+from ..base import BaseClient, SearchResult, get_poll_interval_iter
 
 
 class AccessClient(BaseClient):

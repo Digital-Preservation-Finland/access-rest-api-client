@@ -7,7 +7,7 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import HTTPError
 from tusclient import client
 from tusclient.storage import filestorage
-from ..base import BaseClient
+from ..base import BaseClient, SearchResult
 
 
 class AccessClient(BaseClient):
@@ -131,3 +131,34 @@ class AccessClient(BaseClient):
             return True
         except HTTPError:
             return False
+
+    def list_transfers(self, status=None, page=1, limit=20):
+        """Get list of recent transfers from Digital Preservation Service.
+
+        :param status: Filter the result down to given status in string.
+        :param page: Which page number to view in integer.
+        :param limit: Limit to how many results in integer.
+        :return: JSON data from successful response.
+        :raises HTTPError: When response code is within 400 - 500 range.
+        """
+
+        url = f"{self.base_url}/transfers"
+        params = {"page": page, "limit": limit}
+        if status:
+            params["status"] = status
+        response = self.session.get(url, params=params)
+        data = response.json()["data"]
+
+        prev_url = None
+        if data["links"].get("previous"):
+            links_prev_url = data["links"]["previous"].lstrip("/")
+            prev_url = f"{self.host}/{links_prev_url}"
+
+        next_url = None
+        if data["links"].get("next"):
+            links_next_url = data["links"]["next"].lstrip("/")
+            next_url = f"{self.host}/{links_next_url}"
+
+        return SearchResult(
+            results=data["results"], prev_url=prev_url, next_url=next_url
+        )

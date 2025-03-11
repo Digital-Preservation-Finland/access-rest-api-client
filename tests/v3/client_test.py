@@ -77,8 +77,11 @@ def test_delete_transfer(client_v3, transfer_id, expected_success):
     ("status", "page", "limit", "expected_count", "has_prev", "has_next"),
     [
         (None, None, None, 20, False, False),
+        (None, None, "5", 5, False, True),
+        (None, "2", "5", 5, True, True),
+        ("accepted", "1", "20", 5, False, False),
     ],
-    ids=["Normal listing"],
+    ids=["Normal listing", "Limited listing", "Page 2", "Status filtered"],
 )
 def test_list_transfers(
     client_v3, status, page, limit, expected_count, has_prev, has_next

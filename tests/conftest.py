@@ -1,7 +1,8 @@
 import json
 from configparser import ConfigParser
+from itertools import cycle
 from pathlib import Path
-from uuid import uuid4
+from uuid import uuid4, UUID
 import pytest
 import requests_mock
 from click.testing import CliRunner
@@ -378,5 +379,76 @@ def mock_access_rest_api_v3_endpoints_interactive(access_rest_api_host,
             f"{transfer_id}",
             text=delete_transfer_response,
             status_code=204,
+        )
+        yield
+
+
+@pytest.fixture(scope="function")
+def mock_access_rest_api_v3_list_endpoint(access_rest_api_host, contract_id):
+    # We'll use fixed transfer_id.
+    transfers = []
+    valid_statuses = ["accepted", "in_progress", "rejected", "uploading"]
+    statuses = cycle(valid_statuses)
+    processed_statuses = ["accepted", "rejected"]
+    for i in range(1, 21):
+        transfer_id = str(UUID(int=i))
+        status = next(statuses)
+        if status in processed_statuses:
+            actions = {
+                "report": (
+                    f"/api/3.0/{contract_id}/transfers/"
+                    f"{transfer_id}/report"
+                ),
+            }
+        else:
+            actions = {}
+        transfers.append({
+            "actions": actions,
+            "filename": f"{status}_{i}_package.tar.gz",
+            "sip": {
+                "sip_id": f"{status}-{i}-package",
+                "sip_size": 1,
+            },
+            "status": f"{status}",
+            "timestamp": "Fri, 11 Mar 2025 12:06:44 GMT",
+            "transfer_id": f"{transfer_id}",
+        })
+
+    def list_transfer_response(request, context):
+        limit_filter = request.qs.get("limit", [""])[0]
+        page_filter = request.qs.get("page", [""])[0]
+        status_filter = request.qs.get("status", [""])[0]
+        if status_filter in valid_statuses:
+            results = [x for x in transfers if x["status"] == status_filter]
+        else:
+            results = transfers[:]
+        if not limit_filter:
+            limit_filter = "20"
+        if not page_filter:
+            page_filter = "1"
+        start_index = int(limit_filter) * (int(page_filter) - 1)
+        end_index = int(limit_filter) * (int(page_filter))
+        results = results[start_index:end_index]
+        links = {
+            "self": "",
+            "previous": "",
+            "next": ""
+        }
+        response = json.dumps(
+            {
+                "data": {
+                    "links": links,
+                    "results": results
+                },
+                "status": "success",
+            }
+        )
+        return response
+
+    with requests_mock.Mocker() as mock:
+        mock.get(
+            f"{access_rest_api_host}/api/3.0/{contract_id}/transfers",
+            text=list_transfer_response,
+            status_code=200,
         )
         yield

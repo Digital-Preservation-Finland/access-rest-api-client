@@ -70,3 +70,31 @@ def test_delete_transfer(client_v3, transfer_id, expected_success):
     """Test that we can delete the transfer information and their reports."""
     success = client_v3.delete_transfer(transfer_id)
     assert success is expected_success
+
+
+@pytest.mark.usefixtures("mock_access_rest_api_v3_list_endpoint")
+@pytest.mark.parametrize(
+    ("status", "page", "limit", "expected_count", "has_prev", "has_next"),
+    [
+        (None, None, None, 20, False, False),
+    ],
+    ids=["Normal listing"],
+)
+def test_list_transfers(
+    client_v3, status, page, limit, expected_count, has_prev, has_next
+):
+    """Test that we can get list of recent transfers."""
+    search_result = client_v3.list_transfers(
+        status=status, page=page, limit=limit
+    )
+
+    assert len(search_result.results) == expected_count
+    if has_prev:
+        assert search_result.prev_url
+    else:
+        assert not search_result.prev_url
+
+    if has_next:
+        assert search_result.next_url
+    else:
+        assert not search_result.next_url

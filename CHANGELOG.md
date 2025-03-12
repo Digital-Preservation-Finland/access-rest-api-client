@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
  - Client command for getting transfer info
  - Client command for downloading transfer validation report
  - Client command for deleting trasnfer info and report
+ - Client command for listing transfers
 
 ## [0.6] - 2024-04-03
 ### Added

@@ -533,6 +533,87 @@ def delete_transfer(ctx, transfer_id):
         raise ClickException(f"No transfer found for '{transfer_id}'.")
 
 
+@transfer.command("list", help="List recent transfers")
+@click.option(
+    "--status",
+    default=None,
+    type=click.Choice(
+        [None, "accepted", "in_progress", "rejected", "uploading"]
+    ),
+    help=(
+        "Optional status filter. If not provided, all transfers are returned."
+    ),
+)
+@click.option(
+    "--page",
+    default=1,
+    type=int,
+    help=(
+        "Page to retrieve. `--limit` determines the amount of entries per "
+        "page."
+    ),
+)
+@click.option(
+    "--limit",
+    default=1000,
+    type=int,
+    help="Maximum amount of results to retrieve per page",
+)
+@click.option(
+    "--pager/--no-pager",
+    default=True,
+    help=(
+        "Enable interactive pager to allow scrolling in the results. "
+        "Pager is always disabled when in a non-interactive environment."
+    ),
+)
+@click.pass_context
+def list_transfers(ctx, status, page, limit, pager):
+    """Get list of transfers and display their information."""
+    client = ctx.obj.client_v3
+    echo_func = click.echo_via_pager if pager else click.echo
+    search_results = client.list_transfers(
+        status=status,
+        page=page,
+        limit=limit,
+    )
+    results = []
+
+    for entry in search_results.results:
+        sip_id = "-"
+
+        if entry["sip"]:
+            sip_id = entry["sip"]["sip_id"]
+
+        results.append(
+            (
+                entry["transfer_id"],
+                sip_id,
+                entry["filename"],
+                entry["status"],
+                entry["timestamp"],
+            )
+        )
+
+    tabulated = tabulate.tabulate(
+        results,
+        headers=("Transfer ID", "SIP ID", "Filename", "Status", "Timestamp"),
+    )
+
+    # 'next' URL is provided if more results are available.
+    more_results_available = bool(search_results.next_url)
+
+    output = "".join(
+        [
+            f"Displaying page {page} with {len(results)} results. ",
+            "More page(s) are available." if more_results_available else "",
+            "\n\n",
+            tabulated,
+        ]
+    )
+    echo_func(output)
+
+
 def main():
     """
     Main command-line entry point

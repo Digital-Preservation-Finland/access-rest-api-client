@@ -652,3 +652,12 @@ def test_transfers_delete(cli_runner, transfer_id, transfer_exists):
         assert f"{transfer_id}" in result.output
     else:
         assert result.exit_code == 1
+
+
+@pytest.mark.usefixtures("mock_access_rest_api_v3_list_endpoint")
+def test_transfers_list(cli_runner):
+    """Test that the click-application can list the transfers."""
+    commands = ["transfer", "list"]
+    result = cli_runner(commands)
+    assert result.exit_code == 0
+    assert "accepted" in result.output

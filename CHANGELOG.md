@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.X] - YYYY-MM-DD
 ### Added
  - Client command for uploading transfer
+ - Client command for getting transfer info
+ - Client command for downloading transfer validation report
+ - Client command for deleting trasnfer info and report
 
 ## [0.6] - 2024-04-03
 ### Added

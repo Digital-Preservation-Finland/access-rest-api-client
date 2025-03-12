@@ -443,13 +443,13 @@ def get_transfer_info(ctx, transfer_id):
 @transfer.command("download-report", help="Download report for given transfer")
 @click.argument("transfer_id")
 @click.option(
-    "--report-type",
+    "--file-type",
     default="xml",
     type=click.Choice(["html", "xml"]),
     help="File type of the returned validation report. Defaults to 'xml'.",
 )
 @click.option(
-    "--output",
+    "--path",
     type=click.Path(dir_okay=False, writable=True),
     required=False,
     help=(
@@ -458,21 +458,21 @@ def get_transfer_info(ctx, transfer_id):
     ),
 )
 @click.pass_context
-def download_transfer_report(ctx, transfer_id, report_type, output):
+def download_transfer_report(ctx, transfer_id, file_type, path):
     """Download given transfer's validation report"""
     client = ctx.obj.client_v3
     try:
         report = client.get_validation_report(
-            transfer_id=transfer_id, report_type=report_type
+            transfer_id=transfer_id, report_type=file_type
         )
     except HTTPError:
         raise ClickException(f"No report found for '{transfer_id}'.")
 
     # Echo or save to given path
-    if output:
-        with open(output, "wb") as file:
+    if path:
+        with open(path, "wb") as file:
             file.write(report)
-        click.echo(f"Validation report saved to {output}.")
+        click.echo(f"Validation report saved to {path}.")
     else:
         click.echo(report)
 

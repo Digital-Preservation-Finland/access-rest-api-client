@@ -614,7 +614,7 @@ def test_transfers_download_report(
     commands = ["transfer", "download-report", f"{transfer_id}"]
     report_path = tmp_path / "report.xml"
     if output_file:
-        commands.append("--output")
+        commands.append("--path")
         commands.append(f"{report_path}")
 
     result = cli_runner(commands)

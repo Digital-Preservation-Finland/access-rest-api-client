@@ -310,6 +310,8 @@ def list(ctx, sip_id):
     click.echo(output)
 
 
+# TODO: Provide "auto" file-type as choice option so that it'd make
+#       the selection based on given "path" output.
 @ingest_report.command(help="Get an ingest report of a package")
 @click.argument("sip_id")
 @click.option(
@@ -440,6 +442,8 @@ def get_transfer_info(ctx, transfer_id):
     click.echo(f'Timestamp: {data["timestamp"]}')
 
 
+# TODO: Provide "auto" file-type as choice option so that it'd make
+#       the selection based on given "path" output.
 @transfer.command("download-report", help="Download report for given transfer")
 @click.argument("transfer_id")
 @click.option(

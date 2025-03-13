@@ -518,13 +518,6 @@ def status_transfer(ctx, transfer_id):
     _delete_report(client=client, transfer_id=transfer_id)
 
 
-def _get_path_for_download():
-    """Separated the path resolution so that we could have easier time to
-    mock.
-    """
-    return Path(".").resolve()
-
-
 def _poll_until_transfer_processed(client, transfer_id):
     """Shorthand function to keep polling until expected transfer has the
     expected status to continue with.
@@ -564,7 +557,7 @@ def _download_report(client, transfer_id, status):
     :param transfer_id: The transfer ID to poll for.
     :param status: Status of the transfer
     """
-    path = _get_path_for_download() / status / f"{transfer_id}.xml"
+    path = Path(".") / status / f"{transfer_id}.xml"
     click.echo("Downloading the report...")
     report = client.get_validation_report(transfer_id=transfer_id)
     path.parent.mkdir(parents=True, exist_ok=True)

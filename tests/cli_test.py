@@ -2,7 +2,6 @@
 dpres_access_rest_api_client.cli tests
 """
 
-from unittest.mock import patch
 from urllib.parse import urlencode
 
 import pytest
@@ -664,15 +663,17 @@ def test_transfers_delete(cli_runner, transfer_id, transfer_exists):
     ],
     ids=["Has transfer", "No transfer"],
 )
-def test_transfers_status(cli_runner, transfer_id, transfer_exists, tmp_path):
+def test_transfers_status(
+    cli_runner, transfer_id, transfer_exists, tmp_path, monkeypatch
+):
     """Test that the click-application will poll the status, download the
     report and delete the transfer information afterwards."""
 
     commands = ["transfer", "status", f"{transfer_id}"]
     report_output_dir = tmp_path / "report_download"
-    with patch("dpres_access_rest_api_client.cli._get_path_for_download") as m:
-        m.return_value = report_output_dir.resolve()
-        result = cli_runner(commands)
+    report_output_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.chdir(report_output_dir)
+    result = cli_runner(commands)
 
     if transfer_exists:
         assert result.exit_code == 0

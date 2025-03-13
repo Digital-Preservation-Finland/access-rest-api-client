@@ -444,7 +444,7 @@ def get_transfer_info(ctx, transfer_id):
 
 # TODO: Provide "auto" file-type as choice option so that it'd make
 #       the selection based on given "path" output.
-@transfer.command("download-report", help="Download report for given transfer")
+@transfer.command("get-report", help="Download report for given transfer")
 @click.argument("transfer_id")
 @click.option(
     "--file-type",
@@ -462,8 +462,8 @@ def get_transfer_info(ctx, transfer_id):
     ),
 )
 @click.pass_context
-def download_transfer_report(ctx, transfer_id, file_type, path):
-    """Download given transfer's validation report"""
+def get_transfer_report(ctx, transfer_id, file_type, path):
+    """Get given transfer's validation report"""
     client = ctx.obj.client_v3
     try:
         report = client.get_validation_report(

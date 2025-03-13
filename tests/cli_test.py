@@ -605,12 +605,12 @@ def test_transfers_info(cli_runner, transfer_id, transfer_exists):
     ],
     ids=["Download report", "Write to file", "No report"],
 )
-def test_transfers_download_report(
+def test_transfers_get_report(
     cli_runner, transfer_id, transfer_exists, output_file, tmp_path
 ):
-    """Test that the click-application can get transfer info."""
+    """Test that the click-application can get transfer report."""
 
-    commands = ["transfer", "download-report", f"{transfer_id}"]
+    commands = ["transfer", "get-report", f"{transfer_id}"]
     report_path = tmp_path / "report.xml"
     if output_file:
         commands.append("--path")

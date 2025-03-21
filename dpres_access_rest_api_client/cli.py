@@ -444,7 +444,13 @@ def get_transfer_info(ctx, transfer_id):
 
 # TODO: Provide "auto" file-type as choice option so that it'd make
 #       the selection based on given "path" output.
-@transfer.command("get-report", help="Download report for given transfer")
+@transfer.command(
+    "get-report",
+    help=(
+        "Download report for given transfer. "
+        "If the transfer hasn't been processed yet, poll it until it has been."
+    ),
+)
 @click.argument("transfer_id")
 @click.option(
     "--file-type",
@@ -457,20 +463,21 @@ def get_transfer_info(ctx, transfer_id):
     type=click.Path(dir_okay=False, writable=True),
     required=False,
     help=(
-        "Path where the validation report will be saved to."
+        "Path where the validation report will be saved to. "
         "If not specified, echo to stdout by default."
     ),
 )
 @click.pass_context
 def get_transfer_report(ctx, transfer_id, file_type, path):
-    """Get given transfer's validation report"""
+    """Poll and download given transfer's validation report"""
     client = ctx.obj.client_v3
-    try:
-        report = client.get_validation_report(
-            transfer_id=transfer_id, report_type=file_type
-        )
-    except HTTPError:
-        raise ClickException(f"No report found for '{transfer_id}'.")
+    _poll_until_transfer_processed(
+        client=client, transfer_id=transfer_id
+    )
+
+    report = client.get_validation_report(
+        transfer_id=transfer_id, report_type=file_type
+    )
 
     # Echo or save to given path
     if path:
@@ -479,43 +486,6 @@ def get_transfer_report(ctx, transfer_id, file_type, path):
         click.echo(f"Validation report saved to {path}.")
     else:
         click.echo(report)
-
-
-@transfer.command(
-    "delete", help="Delete transfer information and their report"
-)
-@click.argument("transfer_id")
-@click.pass_context
-def delete_transfer(ctx, transfer_id):
-    """Delete the transfer and their report permanently."""
-    client = ctx.obj.client_v3
-    is_success = client.delete_transfer(transfer_id=transfer_id)
-    if is_success:
-        click.echo(f"Transfer ID '{transfer_id}' has been deleted.")
-    else:
-        raise ClickException(f"No transfer found for '{transfer_id}'.")
-
-
-@transfer.command(
-    "status",
-    help=(
-        "Polls the transfer until it is processed, "
-        "downloads the report, "
-        "then delete the transfer information."
-    ),
-)
-@click.argument("transfer_id")
-@click.pass_context
-def status_transfer(ctx, transfer_id):
-    """Will poll for the given transfer until it is done being processed,
-    then downloads the report to the current directory, then deletes
-    the transfer information from the service."""
-    client = ctx.obj.client_v3
-    status = _poll_until_transfer_processed(
-        client=client, transfer_id=transfer_id
-    )
-    _download_report(client=client, transfer_id=transfer_id, status=status)
-    _delete_report(client=client, transfer_id=transfer_id)
 
 
 def _poll_until_transfer_processed(client, transfer_id):
@@ -546,31 +516,21 @@ def _poll_until_transfer_processed(client, transfer_id):
         current_status = data["status"]
     click.echo("Polling is done. Transfer has been processed.")
     click.echo(f"Transfer has the status of '{current_status}'")
-    return current_status
 
 
-def _download_report(client, transfer_id, status):
-    """Shorthand function to keep download report and immediately write
-    to current directory.
-
-    :param client: The client to conduct the request with.
-    :param transfer_id: The transfer ID to poll for.
-    :param status: Status of the transfer
-    """
-    path = Path(".") / status / f"{transfer_id}.xml"
-    click.echo("Downloading the report...")
-    report = client.get_validation_report(transfer_id=transfer_id)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(f"{path}", "wb") as file:
-        file.write(report)
-    click.echo(f"Validation report saved to {path}.")
-
-
-def _delete_report(client, transfer_id):
-    """Shorthand function to delete the transfer information."""
-    click.echo("Deleting transfer information...")
-    client.delete_transfer(transfer_id=transfer_id)
-    click.echo("Transfer information deleted.")
+@transfer.command(
+    "delete", help="Delete transfer information and its report"
+)
+@click.argument("transfer_id")
+@click.pass_context
+def delete_transfer(ctx, transfer_id):
+    """Delete the transfer and its report permanently."""
+    client = ctx.obj.client_v3
+    is_success = client.delete_transfer(transfer_id=transfer_id)
+    if is_success:
+        click.echo(f"Transfer ID '{transfer_id}' has been deleted.")
+    else:
+        raise ClickException(f"No transfer found for '{transfer_id}'.")
 
 
 def main():

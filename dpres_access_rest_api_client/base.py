@@ -37,7 +37,7 @@ class BaseClient:
         # DIP would cause problems.
         self._host = config["dpres"]["api_host"].rstrip("/")
         self.base_url = (
-            f"{self.host}/api/{self.api_version}/" f"{self.contract_id}"
+            f"{self.host}/api/{self.api_version}/{self.contract_id}"
         )
 
         self.session = self._create_session(config=config)

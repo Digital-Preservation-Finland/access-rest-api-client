@@ -436,7 +436,8 @@ def get_transfer_info(ctx, transfer_id):
         raise ClickException(f"No transfer found for '{transfer_id}'")
 
     click.echo(f'Transfer ID: {data["transfer_id"]}')
-    click.echo(f'SIP ID: {data["sip"]["sip_id"]}')
+    if data["sip"]:
+        click.echo(f'SIP ID: {data["sip"]["sip_id"]}')
     click.echo(f'Filename: {data["filename"]}')
     click.echo(f'Status: {data["status"]}')
     click.echo(f'Timestamp: {data["timestamp"]}')

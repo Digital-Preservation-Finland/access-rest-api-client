@@ -210,13 +210,14 @@ def mock_tus_endpoints(access_rest_api_host, transfer_id):
 def mock_access_rest_api_v3_endpoints(access_rest_api_host, contract_id):
     # We'll use fixed transfer_id.
     transfer_ids = {
-        "success": "00000000-0000-0000-0000-000000000001",
+        "accepted": "00000000-0000-0000-0000-000000000001",
+        "in_progress": "00000000-0000-0000-0000-000000000002",
         "failure": "99999999-9999-9999-9999-999999999999",
     }
     xml_content = '<?xml version="1.0" encoding="utf-8" ?>\n<root>Whee</root>'
     with requests_mock.Mocker() as mock:
         for key, transfer_id in transfer_ids.items():
-            if key == "success":
+            if key == "accepted":
                 get_transfer_response = json.dumps(
                     {
                         "data": {
@@ -232,6 +233,25 @@ def mock_access_rest_api_v3_endpoints(access_rest_api_host, contract_id):
                                 "sip_size": 1,
                             },
                             "status": "accepted",
+                            "timestamp": "Fri, 07 Mar 2025 13:46:44 GMT",
+                            "transfer_id": f"{transfer_id}",
+                        },
+                        "status": "success",
+                    }
+                )
+                get_transfer_status_code = 200
+                get_transfer_report_response = xml_content
+                get_transfer_report_status_code = 200
+                delete_transfer_response = ""
+                delete_transfer_status_code = 204
+            if key == "in_progress":
+                get_transfer_response = json.dumps(
+                    {
+                        "data": {
+                            "actions": {},
+                            "filename": "accepted_package.tar.gz",
+                            "sip": {},
+                            "status": "in_progress",
                             "timestamp": "Fri, 07 Mar 2025 13:46:44 GMT",
                             "transfer_id": f"{transfer_id}",
                         },

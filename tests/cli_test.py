@@ -579,9 +579,10 @@ def test_upload_file(cli_runner, transfer_id, uploadable_file_path_obj):
     ("transfer_id", "transfer_exists"),
     [
         ("00000000-0000-0000-0000-000000000001", True),
+        ("00000000-0000-0000-0000-000000000002", True),
         ("99999999-9999-9999-9999-999999999999", False),
     ],
-    ids=["Get transfer", "No transfer"],
+    ids=["Get transfer", "Get transfer in progress", "No transfer"],
 )
 def test_transfers_info(cli_runner, transfer_id, transfer_exists):
     """Test that the click-application can get transfer info."""

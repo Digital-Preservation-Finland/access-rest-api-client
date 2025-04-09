@@ -23,9 +23,12 @@ def test_upload(client_v3, uploadable_file_path_obj):
     ("transfer_id", "transfer_exists"),
     [
         ("00000000-0000-0000-0000-000000000001", True),
+        ("00000000-0000-0000-0000-000000000002", True),
         ("99999999-9999-9999-9999-999999999999", False),
     ],
-    ids=["Get transfer", "Unauthorized access attempt"],
+    ids=["Get transfer",
+         "Get transfer in progress",
+         "Unauthorized access attempt"],
 )
 def test_get_transfer(client_v3, transfer_id, transfer_exists):
     """Test that we can get specific transfer and status is readable."""

@@ -53,9 +53,50 @@ run
 
 ::
 
-    $ access-client download <AIP-ID>
+    $ access-client dip download <AIP-ID>
 
-See ``access-client download --help`` for the usage of extra parameters.
+See ``access-client dip download --help`` for the usage of extra parameters.
+
+To upload a package, run
+
+::
+
+    $ access-client upload <FILE-PATH>
+
+This command will provide a transfer id for the uploaded package, which is
+needed for the usage of the various transfer commands.
+See ``access-client upload --help`` for the usage of extra parameters.
+
+
+To list recent transfers, run
+
+::
+
+    $ access-client transfer list
+
+This command will also tell the transfer ids of the listed transfers.
+See ``access-client transfer list --help`` for the usage of extra parameters.
+
+To display information on a specific transfer, run
+
+::
+
+    $ access-client transfer info <TRANSFER-ID>
+
+To download the report for a given transfer, run
+
+::
+
+    $ access-client transfer get-report <TRANSFER-ID>
+
+See ``access-client transfer get-report --help`` for the usage of extra parameters.
+
+To delete transfer information and its report, run
+
+::
+
+    $ access-client transfer delete <TRANSFER-ID>
+
 
 Installation using Python Virtualenv for development purposes
 -------------------------------------------------------------

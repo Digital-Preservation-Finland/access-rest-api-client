@@ -462,10 +462,11 @@ def get_transfer_info(ctx, transfer_id):
 @click.option(
     "--path",
     type=click.Path(dir_okay=False, writable=True),
-    required=False,
+    default=None,
     help=(
         "Path where the validation report will be saved to. "
-        "If not specified, echo to stdout by default."
+        "Defaults to `<transfer-id>-report.<file-type>` in the working "
+        "directory."
     ),
 )
 @click.pass_context
@@ -480,13 +481,15 @@ def get_transfer_report(ctx, transfer_id, file_type, path):
         transfer_id=transfer_id, report_type=file_type
     )
 
-    # Echo or save to given path
-    if path:
-        with open(path, "wb") as file:
-            file.write(report)
-        click.echo(f"Validation report saved to {path}.")
+    if not path:
+        path = (Path(".").resolve() / f"{transfer_id}-report").with_suffix(
+            f".{file_type}")
     else:
-        click.echo(report)
+        path = Path(path)
+
+    with open(path, "wb") as file:
+        file.write(report)
+    click.echo(f"Validation report saved to {path}.")
 
 
 def _poll_until_transfer_processed(client, transfer_id):
@@ -539,7 +542,7 @@ def delete_transfer(ctx, transfer_id):
     "--status",
     default=None,
     type=click.Choice(
-        [None, "accepted", "in_progress", "rejected", "uploading"]
+        ["None", "accepted", "in_progress", "rejected", "uploading"]
     ),
     help=(
         "Optional status filter. If not provided, all transfers are returned."

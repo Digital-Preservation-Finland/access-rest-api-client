@@ -5,14 +5,14 @@ from requests.exceptions import HTTPError
 
 
 @pytest.mark.usefixtures("mock_tus_endpoints")
-def test_upload(client_v3, uploadable_file_path_obj):
+def test_upload(client_v3, uploadable_file_fx):
     """Test that we can upload without issue.
 
     The store_url is intentionally set to False so that we won't trigger
     tuspy's implementation of file storage cache.
     """
     uploader = client_v3.create_uploader(
-        file_path=str(uploadable_file_path_obj), chunk_size=3, store_url=False
+        file_path=str(uploadable_file_fx), chunk_size=3, store_url=False
     )
     uploader.upload_chunk()
     uploader.upload()

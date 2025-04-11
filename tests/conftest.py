@@ -122,8 +122,24 @@ def transfer_id():
 
 
 @pytest.fixture(scope="function")
-def uploadable_file_path_obj(tmp_path):
+def uploadable_file_fx(tmp_path):
     """Generate a temporary file that could be used to test uploading."""
+    uploadable_file = tmp_path / "upload_me.tar"
+    uploadable_file.write_text("Hadouken!")
+    return uploadable_file
+
+
+@pytest.fixture(scope="function")
+def empty_file_fx(tmp_path):
+    """Generate empty file."""
+    uploadable_file = tmp_path / "upload_me.tar"
+    uploadable_file.write_text("")
+    return uploadable_file
+
+
+@pytest.fixture(scope="function")
+def wrong_file_ending_fx(tmp_path):
+    """Generate file with wrong file ending."""
     uploadable_file = tmp_path / "upload_me.txt"
     uploadable_file.write_text("Hadouken!")
     return uploadable_file

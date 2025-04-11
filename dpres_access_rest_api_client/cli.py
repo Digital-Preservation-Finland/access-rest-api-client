@@ -6,6 +6,7 @@ service.
 import itertools
 import time
 from pathlib import Path
+import os
 
 import click
 import humanize
@@ -399,6 +400,17 @@ def get(ctx, sip_id, path, transfer_id, latest, file_type):
 )
 @click.pass_context
 def upload(ctx, chunk_size, enable_resumable, file_path):
+    """Upload given file.
+
+    If the file is empty or it isn't a proper archive, raise an error since
+    that kind of files are not valid and there is no sense to upload them.
+    """
+    if os.stat(str(file_path)).st_size == 0:
+        raise ClickException("Given file is empty.")
+    if not _has_valid_file_suffix(str(file_path)):
+        raise ClickException("File format not supported. The upload must be a "
+                             ".zip, .tar, .tar.gz, or .tar.bz2 file.")
+
     uploader = ctx.obj.client_v3.create_uploader(file_path=str(file_path),
                                                  chunk_size=chunk_size,
                                                  store_url=enable_resumable)
@@ -415,7 +427,25 @@ def upload(ctx, chunk_size, enable_resumable, file_path):
             current_offset = uploader.offset
     transfer_id = uploader.url.split("/")[-1]
     click.echo(
-        f"Package uploaded successfully! Your transfer ID is {transfer_id}.")
+        f"Package uploaded successfully! Your transfer ID is {transfer_id}")
+
+
+def _has_valid_file_suffix(filename):
+    """Check that the uploaded file has a valid file ending.
+
+    The preservation service only accepts .zip, .tar, .tar.gz or .tar.bz2
+    files, so if the uploaded file doesn't have the correct file ending, it
+    will be rejected.
+    """
+    if filename.endswith(".zip"):
+        return True
+    if filename.endswith(".tar"):
+        return True
+    if filename.endswith(".tar.gz"):
+        return True
+    if filename.endswith(".tar.bz2"):
+        return True
+    return False
 
 
 @cli.group("transfer")

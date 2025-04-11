@@ -567,13 +567,33 @@ def test_save_ingest_report_to_path(
 
 
 @pytest.mark.usefixtures("mock_tus_endpoints")
-def test_upload_file(cli_runner, transfer_id, uploadable_file_path_obj):
+def test_upload_file(cli_runner, transfer_id, uploadable_file_fx):
     """Test that the click-application can upload file."""
 
-    commands = ["upload", "--chunk-size", "3", f"{uploadable_file_path_obj}"]
+    commands = ["upload", "--chunk-size", "3", f"{uploadable_file_fx}"]
     result = cli_runner(commands)
     assert result.exit_code == 0
     assert f"{transfer_id}" in result.output
+
+
+@pytest.mark.usefixtures("mock_tus_endpoints")
+def test_upload_empty_file(cli_runner, empty_file_fx):
+    """Test that the click-application can handle an empty file"""
+
+    commands = ["upload", f"{empty_file_fx}"]
+    result = cli_runner(commands)
+    assert result.exit_code == 1
+    assert "file is empty" in result.output
+
+
+@pytest.mark.usefixtures("mock_tus_endpoints")
+def test_upload_wrong_file_ending(cli_runner, wrong_file_ending_fx):
+    """Test that the click-application can handle a file with invalid suffix"""
+
+    commands = ["upload", f"{wrong_file_ending_fx}"]
+    result = cli_runner(commands)
+    assert result.exit_code == 1
+    assert "format not supported" in result.output
 
 
 @pytest.mark.usefixtures("mock_access_rest_api_v3_endpoints")

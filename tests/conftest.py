@@ -226,9 +226,9 @@ def mock_tus_endpoints(access_rest_api_host, transfer_id):
 def mock_access_rest_api_v3_endpoints(access_rest_api_host, contract_id):
     # We'll use fixed transfer_id.
     transfer_ids = {
-        "accepted": "00000000-0000-0000-0000-000000000001",
-        "in_progress": "00000000-0000-0000-0000-000000000002",
-        "failure": "99999999-9999-9999-9999-999999999999",
+        "accepted": "sip.tar-00000000-0000-0000-0000-000000000001",
+        "in_progress": "sip.tar-00000000-0000-0000-0000-000000000002",
+        "failure": "sip.tar-99999999-9999-9999-9999-999999999999",
     }
     xml_content = '<?xml version="1.0" encoding="utf-8" ?>\n<root>Whee</root>'
     with requests_mock.Mocker() as mock:
@@ -331,8 +331,8 @@ def mock_access_rest_api_v3_endpoints_interactive(access_rest_api_host,
     """
     report_exists = False
     transfer_exists = True
-    transfer_id = "00000000-0000-0000-0000-000000000001"
-    transfer_id_fail = "99999999-9999-9999-9999-999999999999"
+    transfer_id = "sip.tar-00000000-0000-0000-0000-000000000001"
+    transfer_id_fail = "sip.tar-99999999-9999-9999-9999-999999999999"
     times_polled = 0
     times_need_to_poll = 5
     xml_content = '<?xml version="1.0" encoding="utf-8" ?>\n<root>Whee</root>'

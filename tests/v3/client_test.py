@@ -22,9 +22,9 @@ def test_upload(client_v3, uploadable_file_fx):
 @pytest.mark.parametrize(
     ("transfer_id", "transfer_exists"),
     [
-        ("00000000-0000-0000-0000-000000000001", True),
-        ("00000000-0000-0000-0000-000000000002", True),
-        ("99999999-9999-9999-9999-999999999999", False),
+        ("sip.tar-00000000-0000-0000-0000-000000000001", True),
+        ("sip.tar-00000000-0000-0000-0000-000000000002", True),
+        ("sip.tar-99999999-9999-9999-9999-999999999999", False),
     ],
     ids=["Get transfer",
          "Get transfer in progress",
@@ -45,8 +45,8 @@ def test_get_transfer(client_v3, transfer_id, transfer_exists):
 @pytest.mark.parametrize(
     ("transfer_id", "report_exists"),
     [
-        ("00000000-0000-0000-0000-000000000001", True),
-        ("99999999-9999-9999-9999-999999999999", False),
+        ("sip.tar-00000000-0000-0000-0000-000000000001", True),
+        ("sip.tar-99999999-9999-9999-9999-999999999999", False),
     ],
     ids=["Get report", "Unauthorized access attempt"],
 )
@@ -64,8 +64,8 @@ def test_get_validation_report(client_v3, transfer_id, report_exists):
 @pytest.mark.parametrize(
     ("transfer_id", "expected_success"),
     [
-        ("00000000-0000-0000-0000-000000000001", True),
-        ("99999999-9999-9999-9999-999999999999", False),
+        ("sip.tar-00000000-0000-0000-0000-000000000001", True),
+        ("sip.tar-99999999-9999-9999-9999-999999999999", False),
     ],
     ids=["Delete transfer", "Unauthorized deletion attempt"],
 )

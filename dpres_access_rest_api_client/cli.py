@@ -512,8 +512,7 @@ def get_transfer_report(ctx, transfer_id, file_type, path):
     )
 
     if not path:
-        path = (Path(".").resolve() / f"{transfer_id}-report").with_suffix(
-            f".{file_type}")
+        path = Path(".").resolve() / f"{transfer_id}-report.{file_type}"
     else:
         path = Path(path)
 

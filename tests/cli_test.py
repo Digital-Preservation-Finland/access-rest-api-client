@@ -600,9 +600,9 @@ def test_upload_wrong_file_ending(cli_runner, wrong_file_ending_fx):
 @pytest.mark.parametrize(
     ("transfer_id", "transfer_exists"),
     [
-        ("00000000-0000-0000-0000-000000000001", True),
-        ("00000000-0000-0000-0000-000000000002", True),
-        ("99999999-9999-9999-9999-999999999999", False),
+        ("sip.tar-00000000-0000-0000-0000-000000000001", True),
+        ("sip.tar-00000000-0000-0000-0000-000000000002", True),
+        ("sip.tar-99999999-9999-9999-9999-999999999999", False),
     ],
     ids=["Get transfer", "Get transfer in progress", "No transfer"],
 )
@@ -622,9 +622,9 @@ def test_transfers_info(cli_runner, transfer_id, transfer_exists):
 @pytest.mark.parametrize(
     ("transfer_id", "transfer_exists", "output_file"),
     [
-        ("00000000-0000-0000-0000-000000000001", True, False),
-        ("00000000-0000-0000-0000-000000000001", True, True),
-        ("99999999-9999-9999-9999-999999999999", False, True),
+        ("sip.tar-00000000-0000-0000-0000-000000000001", True, False),
+        ("sip.tar-00000000-0000-0000-0000-000000000001", True, True),
+        ("sip.tar-99999999-9999-9999-9999-999999999999", False, True),
     ],
     ids=["Write to default", "Write to custom", "No report"],
 )
@@ -664,8 +664,8 @@ def test_transfers_get_report(
 @pytest.mark.parametrize(
     ("transfer_id", "transfer_exists"),
     [
-        ("00000000-0000-0000-0000-000000000001", True),
-        ("99999999-9999-9999-9999-999999999999", False),
+        ("sip.tar-00000000-0000-0000-0000-000000000001", True),
+        ("sip.tar-99999999-9999-9999-9999-999999999999", False),
     ],
     ids=["Delete transfer", "No transfer"],
 )

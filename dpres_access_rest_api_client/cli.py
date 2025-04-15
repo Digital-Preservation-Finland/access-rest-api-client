@@ -532,6 +532,18 @@ def _poll_until_transfer_processed(client, transfer_id):
     spinner_anim = _spinner_animation()
     processed_statuses = ["accepted", "rejected"]
     current_status = "in_progress"
+    poll_interval = -0.1
+    poll_interval_iter = get_poll_interval_iter()
+
+    # See if the transfer has already been processed, in which case we don't
+    # need to poll it at all.
+    try:
+        data = client.get_transfer(transfer_id=transfer_id)
+        current_status = data["status"]
+    except HTTPError:
+        click.echo("")
+        raise ClickException(f"No transfer found for '{transfer_id}'")
+
     while current_status not in processed_statuses:
         # Print a status message with a simple spinner animation so that the
         # user doesn't get antsy
@@ -541,12 +553,16 @@ def _poll_until_transfer_processed(client, transfer_id):
             f"\r",
             nl=False,
         )
-        try:
+
+        if poll_interval < 0:
+            # Poll with start interval of 3s and max of 60s
             data = client.get_transfer(transfer_id=transfer_id)
-        except HTTPError:
-            click.echo("")
-            raise ClickException(f"No transfer found for '{transfer_id}'")
-        current_status = data["status"]
+            current_status = data["status"]
+            poll_interval = next(poll_interval_iter)
+
+        poll_interval -= 0.25
+        time.sleep(0.25)
+
     click.echo("Polling is done. Transfer has been processed.")
     click.echo(f"Transfer has the status of '{current_status}'")
 

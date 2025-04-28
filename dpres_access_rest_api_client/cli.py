@@ -427,6 +427,7 @@ def get_transfer_report(ctx, transfer_id, file_type, path):
         client=client, transfer_id=transfer_id
     )
 
+    click.echo("Downloading SIP validation report...")
     report = client.get_validation_report(
         transfer_id=transfer_id, report_type=file_type
     )
@@ -451,7 +452,6 @@ def _poll_until_transfer_processed(client, transfer_id):
     """
     spinner_anim = _spinner_animation()
     processed_statuses = ["accepted", "rejected"]
-    current_status = "in_progress"
     poll_interval = -0.1
     poll_interval_iter = get_poll_interval_iter()
 
@@ -468,7 +468,8 @@ def _poll_until_transfer_processed(client, transfer_id):
         # Print a status message with a simple spinner animation so that the
         # user doesn't get antsy
         click.echo(
-            f"Polling for transfer status... {next(spinner_anim)}"
+            "Polling the DPS ingest for the SIP validation report..."
+            f"{next(spinner_anim)}"
             # Carriage return so that the same line is overwritten
             f"\r",
             nl=False,

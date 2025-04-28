@@ -567,11 +567,23 @@ def test_save_ingest_report_to_path(
     assert download_path.read_bytes() == b"html ingest report"
 
 
+@pytest.mark.parametrize(
+    "enable_resumable",
+    [
+        False,
+        True,
+    ],
+    ids=["Normal use", "Resumable enabled"],
+)
 @pytest.mark.usefixtures("mock_tus_endpoints")
-def test_upload_file(cli_runner, transfer_id, uploadable_file_fx):
+def test_upload_file(
+    cli_runner, transfer_id, uploadable_file_fx, enable_resumable
+):
     """Test that the click-application can upload file."""
 
     commands = ["upload", "--chunk-size", "3", f"{uploadable_file_fx}"]
+    if enable_resumable:
+        commands.append("--enable-resumable")
     result = cli_runner(commands)
     assert result.exit_code == 0
     assert f"{transfer_id}" in result.output

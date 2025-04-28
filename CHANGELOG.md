@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [X.X] - YYYY-MM-DD
 ### Changed
  - Catch HTTP Error exception during client command transfer list
+ - Change TUS storage cache file to generate at user's HOME folder when using client command
 
 ## [0.7] - 2025-04-16
 ### Added

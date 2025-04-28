@@ -410,10 +410,25 @@ def upload(ctx, chunk_size, enable_resumable, file_path):
     if not _has_valid_file_suffix(str(file_path)):
         raise ClickException("File format not supported. The upload must be a "
                              ".zip, .tar, .tar.gz, or .tar.bz2 file.")
-
-    uploader = ctx.obj.client_v3.create_uploader(file_path=str(file_path),
-                                                 chunk_size=chunk_size,
-                                                 store_url=enable_resumable)
+    cache_file = None
+    if enable_resumable:
+        try:
+            cache_file_path = (
+                Path.home() / ".cache" / "dpres_access_rest_api_client"
+            )
+            cache_file_path.mkdir(parents=True, exist_ok=True)
+        except PermissionError as err:
+            raise ClickException(
+                "Resumable option requires permission to write to "
+                f"[{err.filename}]"
+            )
+        cache_file = str(cache_file_path / "tus_storage")
+    uploader = ctx.obj.client_v3.create_uploader(
+        file_path=str(file_path),
+        chunk_size=chunk_size,
+        store_url=enable_resumable,
+        cache_file=cache_file,
+    )
     upload_length = uploader.get_file_size()
     current_offset = uploader.offset
     with click.progressbar(length=upload_length,

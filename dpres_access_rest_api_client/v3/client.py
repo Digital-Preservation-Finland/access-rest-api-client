@@ -3,10 +3,12 @@ Client module to utilize National Digital Preservation Services REST API 3.0.
 """
 
 import os
+from typing import Union
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import HTTPError
 from tusclient import client
 from tusclient.storage import filestorage
+from tusclient.uploader import Uploader
 from ..base import BaseClient, SearchResult
 
 
@@ -57,7 +59,13 @@ class AccessClient(BaseClient):
         """
         return self._tus_endpoint
 
-    def create_uploader(self, file_path, chunk_size=None, store_url=False):
+    def create_uploader(
+        self,
+        file_path: str,
+        chunk_size: Union[int, None] = None,
+        store_url: bool = False,
+        cache_file: str = "dpres_access_rest_api_client_tus_storage",
+    ) -> Uploader:
         """Create TUS Uploader object tailored for Digital Preservation
         Service.
 
@@ -67,6 +75,8 @@ class AccessClient(BaseClient):
         :param store_url: Boolean whether to cache the URLs for given file
             to later try and resume. Defaulted to False due to current
             buggy issue: https://github.com/tus/tus-py-client/issues/103.
+        :param cache_file: Which file to use to cache TUS storage for
+            resumable usage. This is only utilized when store_url is True.
         :return: TUS Uploader-instance.
         """
         kwargs = {
@@ -81,9 +91,7 @@ class AccessClient(BaseClient):
             kwargs["verify_tls_cert"] = False
 
         if store_url:
-            storage = filestorage.FileStorage(
-                ".cache/access_rest_api_client_storage"
-            )
+            storage = filestorage.FileStorage(cache_file)
             kwargs["store_url"] = True
             kwargs["url_storage"] = storage
 

@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [X.X] - YYYY-MM-DD
+### Changed
+ - Catch HTTP Error exception during client command transfer list
+
 ## [0.7] - 2025-04-16
 ### Added
  - Client command for uploading transfer

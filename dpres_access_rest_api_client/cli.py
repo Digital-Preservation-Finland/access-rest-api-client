@@ -468,6 +468,7 @@ def _poll_until_transfer_processed(client, transfer_id):
         # Print a status message with a simple spinner animation so that the
         # user doesn't get antsy
         click.echo(
+            f'The SIP has the status "{current_status}". '
             "Polling the DPS ingest for the SIP validation report..."
             f"{next(spinner_anim)}"
             # Carriage return so that the same line is overwritten

@@ -2,6 +2,7 @@
 dpres_access_rest_api_client.cli tests
 """
 
+import json
 from urllib.parse import urlencode
 
 import pytest
@@ -688,3 +689,35 @@ def test_transfers_list(cli_runner):
     result = cli_runner(commands)
     assert result.exit_code == 0
     assert "accepted" in result.output
+
+
+@pytest.mark.parametrize(
+    "response_text",
+    [
+        json.dumps(
+            {
+                "data": {"message": "I'm a teapot in json format"},
+                "status": "fail",
+            }
+        ),
+        "I'm a teapot in text format",
+    ],
+    ids=["Expected response format", "Unexpected response format"],
+)
+def test_transfers_list_errors(
+    cli_runner, access_rest_api_host, contract_id, requests_mock, response_text
+):
+    """Test that the click-application handles error responses when
+    attempting to list transfers.
+    """
+    commands = ["transfer", "list"]
+
+    requests_mock.get(
+        f"{access_rest_api_host}/api/3.0/{contract_id}/transfers",
+        text=response_text,
+        status_code=418,
+    )
+
+    result = cli_runner(commands)
+    assert result.exit_code == 1
+    assert "Error:" in result.output

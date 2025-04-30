@@ -17,7 +17,7 @@ Installation using RPM packages (preferred)
 Installation on Linux distributions is done by using the RPM Package Manager.
 See how to `configure the PAS-jakelu RPM repositories`_ to setup necessary software sources.
 
-.. _configure the PAS-jakelu RPM repositories: https://www.digitalpreservation.fi/user_guide/installation_of_tools 
+.. _configure the PAS-jakelu RPM repositories: https://www.digitalpreservation.fi/user_guide/installation_of_tools
 
 After the repository has been added, the package can be installed by running the following command::
 
@@ -36,6 +36,45 @@ file by running
 Edit the configuration file with necessary credentials.
 You can also save the configuration file at ``/etc/dpres_access_rest_api_client/config.conf``
 or define the path using the environment variable ``ACCESS_REST_API_CLIENT_CONF``.
+
+To upload a package, run
+
+::
+
+    $ access-client upload <FILE-PATH>
+
+This command will provide a transfer id for the uploaded package, which is
+needed for the usage of the various transfer commands.
+See ``access-client upload --help`` for the usage of extra parameters.
+
+To download the report for a given transfer, run
+
+::
+
+    $ access-client transfer get-report <TRANSFER-ID>
+
+See ``access-client transfer get-report --help`` for the usage of extra parameters.
+
+To display information on a specific transfer, run
+
+::
+
+    $ access-client transfer info <TRANSFER-ID>
+
+To delete transfer information and its report, run
+
+::
+
+    $ access-client transfer delete <TRANSFER-ID>
+
+To list recent transfers, run
+
+::
+
+    $ access-client transfer list
+
+This command will also tell the transfer ids of the listed transfers.
+See ``access-client transfer list --help`` for the usage of extra parameters.
 
 To search for packages to download, run
 
@@ -57,45 +96,12 @@ run
 
 See ``access-client dip download --help`` for the usage of extra parameters.
 
-To upload a package, run
+To delete a DIP package, copy the DIP ID from the previous
+``access-client search --query pkg_type:DIP`` command and then run
 
 ::
 
-    $ access-client upload <FILE-PATH>
-
-This command will provide a transfer id for the uploaded package, which is
-needed for the usage of the various transfer commands.
-See ``access-client upload --help`` for the usage of extra parameters.
-
-
-To list recent transfers, run
-
-::
-
-    $ access-client transfer list
-
-This command will also tell the transfer ids of the listed transfers.
-See ``access-client transfer list --help`` for the usage of extra parameters.
-
-To display information on a specific transfer, run
-
-::
-
-    $ access-client transfer info <TRANSFER-ID>
-
-To download the report for a given transfer, run
-
-::
-
-    $ access-client transfer get-report <TRANSFER-ID>
-
-See ``access-client transfer get-report --help`` for the usage of extra parameters.
-
-To delete transfer information and its report, run
-
-::
-
-    $ access-client transfer delete <TRANSFER-ID>
+    $ access-client dip delete <DIP-ID>
 
 
 Installation using Python Virtualenv for development purposes
@@ -105,7 +111,7 @@ You can install the application inside a virtualenv using the following
 instructions.
 
 Create a virtual environment::
-    
+
     python3 -m venv venv
 
 Run the following to activate the virtual environment::
@@ -120,6 +126,84 @@ Install the required software with commands::
 
 To deactivate the virtual environment, run ``deactivate``.
 To reactivate it, run the ``source`` command above.
+
+Using the Python classes
+------------------------
+This application comes with client class that interacts with Finnish
+National Digital Preservation Service's API. More information on available
+API can be read in `https://digitalpreservation.fi/en <https://digitalpreservation.fi/en/specifications/interfaces>`_.
+
+Configuration
+^^^^^^^^^^^^^
+
+Before the client classes can be used, it's recommend to first setup necessary
+configuration files.
+
+Creating configuration::
+
+    # Import the configuration creation function
+    from .config import write_default_config
+
+    # Create the configuration file. The function returns the location where
+    # the configuration is written.
+    path = write_default_config()
+
+By default, the path goes to home directory under
+``.config/dpres_access_rest_api_client/config.conf``.
+Edit the necessary information.
+
+API 2.X
+^^^^^^^
+
+Client with implementation that utilizes API 2.X endpoints.
+
+Example of downloading DIP::
+
+    # Import the API 2.X access client class
+    from .v2.client import AccessClient
+
+    # Initialize the client
+    client = AccessClient()
+
+    # Create a new DIPRequest request instance
+    dip_request = client.create_dip_request(<AIP_ID>)
+
+    # Check is DIP ready to download
+    is_dip_ready = dip_request.check_status()
+
+    # Download DIP if it is ready
+    if is_dip_ready:
+        dip_request.download(<download location.tar.gz>)
+
+API 3.X
+^^^^^^^
+
+Client with implementation that utilizes API 3.X endpoints.
+
+Example of uploading package with tus.io protocol::
+
+    # Import the API 3.X access client class
+    from .v3.client import AccessClient
+
+    # Initialize the client
+    client = AccessClient()
+
+    # Create a new TUS Uploader request instance to upload package in
+    # 8192 bytes size pieces.
+    uploader = client.create_uploader(<filepath to package>, chunk_size=8192)
+
+    # First get information how much of the data needs to be sent.
+    upload_length = uploader.get_file_size()
+
+    # Now start uploading using tus.io protocol.
+    while uploader.offset < upload_length:
+        uploader.upload_chunk()
+
+    # Upload is finished so we can now fetch the transfer ID from the URL.
+    transfer_id = uploader.url.split("/")[-1]
+
+More information on tus.io protocols can be read at
+`tus.io's website <https://tus.io/protocols/resumable-upload>`_.
 
 Copyright
 ---------

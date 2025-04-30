@@ -696,7 +696,8 @@ def test_transfers_list(cli_runner):
     [
         json.dumps(
             {
-                "data": {"message": "I'm a teapot in json format"},
+                "data": {"message": "I'm a teapot in json format",
+                         "random_key": "Some message involved with this key"},
                 "status": "fail",
             }
         ),

@@ -676,11 +676,12 @@ def _extract_http_error_message(err: HTTPError) -> str:
     :return: Error message that would be displayed.
     """
     try:
-        message = err.response.json()["data"]["message"]
+        data = err.response.json()["data"]
     except (KeyError, ValueError):
         # Catching ValueError if the response text was not json.
         return str(err)
-    return f"Server responded with following message: {message}"
+    message = '\n'.join(f"- {x}: {y}" for x, y in data.items())
+    return f"Server responded with following message:\n{message}"
 
 
 def main():

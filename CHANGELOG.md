@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
  - Change TUS storage cache file to generate at user's HOME folder when using client command
  - Removed ingest-report client command. This is superseded by transfer client command. 
  - Change text output when using client command for downloading transfer validation report
+ - Update README.rst to contain more information on client and class usage.
 
 ## [0.7] - 2025-04-16
 ### Added

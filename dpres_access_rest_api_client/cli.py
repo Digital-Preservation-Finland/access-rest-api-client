@@ -12,7 +12,7 @@ import click
 import humanize
 import tabulate
 from click.exceptions import ClickException
-from requests.exceptions import HTTPError, JSONDecodeError
+from requests.exceptions import HTTPError
 
 from .v2.client import AccessClient
 from .base import get_poll_interval_iter
@@ -677,7 +677,8 @@ def _extract_http_error_message(err: HTTPError) -> str:
     """
     try:
         message = err.response.json()["data"]["message"]
-    except (KeyError, JSONDecodeError):
+    except (KeyError, ValueError):
+        # Catching ValueError if the response text was not json.
         return str(err)
     return f"Server responded with following message: {message}"
 

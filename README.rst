@@ -26,86 +26,89 @@ After the repository has been added, the package can be installed by running the
 Usage
 -----
 
-Write configuration file
-    After you have installed the application, you can create the configuration
-    file by running
+**Write configuration file**
+
+After you have installed the application, you can create the configuration
+file by running
 
 ::
 
     $ access-client write-config
 
-    Edit the configuration file with necessary credentials.
-    You can also save the configuration file at ``/etc/dpres_access_rest_api_client/config.conf``
-    or define the path using the environment variable ``ACCESS_REST_API_CLIENT_CONF``.
+Edit the configuration file with necessary credentials.
+You can also save the configuration file at ``/etc/dpres_access_rest_api_client/config.conf``
+or define the path using the environment variable ``ACCESS_REST_API_CLIENT_CONF``.
 
-Ingest content to the DPS
-    To upload a package, run
+**Ingest content to the DPS**
+
+To upload a package, run
 
 ::
 
     $ access-client upload <FILE-PATH>
 
-    This command will provide a transfer id for the uploaded package, which is
-    needed for the usage of the various transfer commands.
-    See ``access-client upload --help`` for the usage of extra parameters.
+This command will provide a transfer id for the uploaded package, which is
+needed for the usage of the various transfer commands.
+See ``access-client upload --help`` for the usage of extra parameters.
 
-    To download the SIP validation report for a given transfer, run
+To download the SIP validation report for a given transfer, run
 
 ::
 
     $ access-client transfer get-report <TRANSFER-ID>
 
-    This command will poll the DPS ingest and download the SIP validation report
-    when the ingest process is finished.
+This command will poll the DPS ingest and download the SIP validation report
+when the ingest process is finished.
 
-    See ``access-client transfer get-report --help`` for the usage of extra
-    parameters.
+See ``access-client transfer get-report --help`` for the usage of extra
+parameters.
 
-    To display information on a specific transfer, run
+To display information on a specific transfer, run
 
 ::
 
     $ access-client transfer info <TRANSFER-ID>
 
-    To delete transfer information and its report, run
+To delete transfer information and its report, run
 
 ::
 
     $ access-client transfer delete <TRANSFER-ID>
 
-    To list recent transfers, run
+To list recent transfers, run
 
 ::
 
     $ access-client transfer list
 
-    This command will also tell the transfer ids of the listed transfers.
-    See ``access-client transfer list --help`` for the usage of extra parameters.
+This command will also tell the transfer ids of the listed transfers.
+See ``access-client transfer list --help`` for the usage of extra parameters.
 
-Search and dissemination content from the DPS
-    To search for packages to download, run
+**Search and dissemination content from the DPS**
+
+To search for packages to download, run
 
 ::
 
     $ access-client search
 
-    An optional search query can be passed using the ``--query``. See the
-    `API documentation <https://urn.fi/urn:nbn:fi-fe2020100578098>`_
-    for details such as syntax and accepted field names.
+An optional search query can be passed using the ``--query``. See the
+`API documentation <https://urn.fi/urn:nbn:fi-fe2020100578098>`_
+for details such as syntax and accepted field names.
 
-    See ``access-client search --help`` for the usage of extra parameters.
+See ``access-client search --help`` for the usage of extra parameters.
 
-    To download a package, copy the AIP ID from the previous command and then
-    run
+To download a package, copy the AIP ID from the previous command and then
+run
 
 ::
 
     $ access-client dip download <AIP-ID>
 
-    See ``access-client dip download --help`` for the usage of extra parameters.
+See ``access-client dip download --help`` for the usage of extra parameters.
 
-    To delete a DIP package, copy the DIP ID from the previous
-    ``access-client search --query pkg_type:DIP`` command and then run
+To delete a DIP package, copy the DIP ID from the previous
+``access-client search --query pkg_type:DIP`` command and then run
 
 ::
 
@@ -139,7 +142,7 @@ Using the Python classes
 ------------------------
 This application comes with client class that interacts with Finnish
 National Digital Preservation Service's API. More information on available
-API can be read in `https://digitalpreservation.fi/en <https://digitalpreservation.fi/en/specifications/interfaces>`_.
+API can be read in `https://urn.fi/urn:nbn:fi-fe2020100578098 <https://urn.fi/urn:nbn:fi-fe2020100578098>`_.
 
 Configuration
 ^^^^^^^^^^^^^
@@ -150,7 +153,7 @@ configuration files.
 Creating configuration::
 
     # Import the configuration creation function
-    from .config import write_default_config
+    from dpres_access_rest_api_client.config import write_default_config
 
     # Create the configuration file. The function returns the location where
     # the configuration is written.
@@ -168,7 +171,7 @@ Client with implementation that utilizes API 2.X endpoints.
 Example of downloading DIP::
 
     # Import the API 2.X access client class
-    from .v2.client import AccessClient
+    from dpres_access_rest_api_client.v2.client import AccessClient
 
     # Initialize the client
     client = AccessClient()
@@ -191,7 +194,7 @@ Client with implementation that utilizes API 3.X endpoints.
 Example of uploading package with tus.io protocol::
 
     # Import the API 3.X access client class
-    from .v3.client import AccessClient
+    from dpres_access_rest_api_client.v3.client import AccessClient
 
     # Initialize the client
     client = AccessClient()
